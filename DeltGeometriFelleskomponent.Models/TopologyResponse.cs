@@ -2,6 +2,6 @@
 
 public class TopologyResponse
 {
-    public IEnumerable<NgisFeature> AffectedFeatures { get; set; }
+    public List<NgisFeature> AffectedFeatures { get; set; } = new List<NgisFeature>();
     public bool IsValid { get; set; }
 }

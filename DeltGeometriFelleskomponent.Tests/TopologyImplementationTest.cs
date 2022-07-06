@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DeltGeometriFelleskomponent.Models;
 using DeltGeometriFelleskomponent.TopologyImplementation;
@@ -33,7 +34,7 @@ namespace DeltGeometriFelleskomponent.Tests
         }
 
         [Fact]
-        public void ReturnsLineAndPolygonWhenCreatingPolygon()
+        public void ReturnsLineAndPolygonWhenCreatingPolygonFromPolygon()
         {
             var linearRing = new LinearRing(new[]
             {
@@ -45,10 +46,15 @@ namespace DeltGeometriFelleskomponent.Tests
             });
             var polygon = new Polygon(linearRing);
             var id = Guid.NewGuid().ToString();
-
+            
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
-                Feature = new NgisFeature() { Geometry = polygon, LocalId = id, Operation = Operation.Create },
+                Feature = new NgisFeature() { 
+                    Geometry = polygon, 
+                    LocalId = id, 
+                    Type = "Kaiområde",
+                    Operation = Operation.Create 
+                },
 
             });
 
@@ -62,6 +68,60 @@ namespace DeltGeometriFelleskomponent.Tests
             var feature2 = res.AffectedFeatures.ElementAt(1);
 
             Assert.Equal("LineString", feature2.Geometry!.GeometryType);
+            Assert.Equal(Operation.Create, feature1.Operation);
+
+            Assert.Single(feature1.References!);
+            Assert.Equal(feature1.References!.First(), feature2.LocalId);
+        }
+
+
+        [Fact]
+        public void ReturnsLineAndPolygonWhenCreatingPolygonFromLine()
+        {
+
+            var id = Guid.NewGuid().ToString();
+
+            var linearRing = new LinearRing(new[]
+            {
+                new Coordinate(0, 0),
+                new Coordinate(0, 1),
+                new Coordinate(1, 1),
+                new Coordinate(1, 0),
+                new Coordinate(0, 0),
+            });
+
+            var linestring = new LineString(linearRing.Coordinates);
+
+            var lineFeature = new NgisFeature()
+            {
+                Geometry = linestring,
+                LocalId = id,
+                Operation = Operation.Create,
+                Type = "KaiområdeGrense"
+            };
+
+            var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
+            {
+                Feature = new NgisFeature()
+                {
+                    Geometry = new Polygon(null),
+                    Type = "Kaiområde",
+                    Operation = Operation.Create,
+                    References = new List<string>() { id}
+                },
+                AffectedFeatures = new List<NgisFeature>() { lineFeature}
+            });
+
+            Assert.Equal(2, res.AffectedFeatures.Count());
+            var feature1 = res.AffectedFeatures.First();
+
+            Assert.Equal("LineString", feature1.Geometry!.GeometryType);
+            Assert.Equal(id, feature1.LocalId);
+            Assert.Equal(Operation.Create, feature1.Operation);
+
+            var feature2 = res.AffectedFeatures.ElementAt(1);
+
+            Assert.Equal("Polygon", feature2.Geometry!.GeometryType);
             Assert.Equal(Operation.Create, feature1.Operation);
 
             Assert.Single(feature1.References!);
