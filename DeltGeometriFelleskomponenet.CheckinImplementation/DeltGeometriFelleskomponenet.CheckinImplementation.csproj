@@ -14,4 +14,16 @@
     <ProjectReference Include="..\DeltGeometriFelleskomponent.Models\DeltGeometriFelleskomponent.Models.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="examples\ArealressursFlater_onlyLines.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="examples\ArealressursFlater_onlyPolygons.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="examples\ArealressursFlater_replace.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

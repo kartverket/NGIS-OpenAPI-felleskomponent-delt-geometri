@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
-    <PackageReference Include="NetTopologySuite" Version="2.4.0" />
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON4STJ" Version="2.1.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -22,7 +22,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DeltGeometriFelleskomponenet.CheckinImplementation\DeltGeometriFelleskomponenet.CheckinImplementation.csproj" />
     <ProjectReference Include="..\DeltGeometriFelleskomponent.TopologyImplementation\DeltGeometriFelleskomponent.TopologyImplementation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="examples\ArealressursFlater_onlyLines.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="examples\ArealressursFlater_onlyPolygons.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="examples\ArealressursFlater_replace.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

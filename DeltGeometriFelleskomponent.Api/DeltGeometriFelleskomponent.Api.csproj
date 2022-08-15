@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DeltGeometriFelleskomponenet.CheckinImplementation\DeltGeometriFelleskomponenet.CheckinImplementation.csproj" />
     <ProjectReference Include="..\DeltGeometriFelleskomponent.Models\DeltGeometriFelleskomponent.Models.csproj" />
     <ProjectReference Include="..\DeltGeometriFelleskomponent.TopologyImplementation\DeltGeometriFelleskomponent.TopologyImplementation.csproj" />
   </ItemGroup>

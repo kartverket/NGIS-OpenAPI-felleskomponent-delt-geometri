@@ -2,6 +2,8 @@ using DeltGeometriFelleskomponent.TopologyImplementation;
 using System.Text.Json.Serialization;
 using DeltGeometriFelleskomponent.Api;
 using Microsoft.AspNetCore.Mvc;
+using DeltGeometriFelleskomponent.Api.Controllers;
+using DeltGeometriFelleskomponenet.CheckinImplementation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<ITopologyImplementation, TopologyImplementation>();
+builder.Services.AddTransient<ICheckinImplementation, CheckinImplementation>();
 
 builder.Services.Configure<JsonOptions>(options =>
 {
