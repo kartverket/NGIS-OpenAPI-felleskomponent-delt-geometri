@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: ACR build
+      - name: Build and push to Azure Container Registry
         id: acr
         uses: azure/acr-build@v1
         with:
