@@ -17,5 +17,5 @@ jobs:
           registry: ${{ secrets.registry }}
           repository: ${{ secrets.repository }}
           image: api
-          tag: latest
+          tag: latest, tag2
           branch: main
