@@ -16,6 +16,6 @@ jobs:
           tenant: ${{ secrets.tenant }}
           registry: ${{ secrets.registry }}
           repository: ${{ secrets.repository }}
-          image: felleskomponent
+          image: api
           tag: latest
           branch: main
