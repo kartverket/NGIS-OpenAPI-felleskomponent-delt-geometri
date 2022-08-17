@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Build and push to Azure Container Registry
+      - name: Build and push to Azure Container Registry (Latest tag)
         id: acr
         uses: azure/acr-build@v1
         with:
@@ -17,5 +17,16 @@ jobs:
           registry: ${{ secrets.registry }}
           repository: ${{ secrets.repository }}
           image: api
-          tag: latest, tag2
+          tag: latest
+          branch: main
+      - name: Build and push to Azure Container Registry (SHA Tag)
+        id: acr-sha
+        uses: azure/acr-build@v1
+        with:
+          service_principal: ${{ secrets.service_principal }}
+          service_principal_password: ${{ secrets.service_principal_password }}
+          tenant: ${{ secrets.tenant }}
+          registry: ${{ secrets.registry }}
+          repository: ${{ secrets.repository }}
+          image: api
           branch: main
