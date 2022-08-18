@@ -26,7 +26,10 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseOpenApi();
-app.UseSwaggerUi3();
+app.UseSwaggerUi3(c =>
+{
+    c.DocExpansion = "full";
+});
 
 app.UseHttpsRedirection();
 
