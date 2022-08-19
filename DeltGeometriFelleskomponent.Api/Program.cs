@@ -23,13 +23,20 @@ builder.Services.Configure<JsonOptions>(options =>
     options.JsonSerializerOptions.Converters.Add(new NetTopologySuite.IO.Converters.GeoJsonConverterFactory());
 });
 
-builder.Services.AddOpenApiDocument(GeoJsonOpenApiDefs.AddGeoJsonMappings);
+builder.Services.AddOpenApiDocument(config =>
+{
+    config.Title = "NGIS Felleskomponent";
+    GeoJsonOpenApiDefs.AddGeoJsonMappings(config);
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseOpenApi();
-app.UseSwaggerUi3();
+app.UseSwaggerUi3(c =>
+{
+    c.DocExpansion = "full";
+});
 
 app.UseHttpsRedirection();
 

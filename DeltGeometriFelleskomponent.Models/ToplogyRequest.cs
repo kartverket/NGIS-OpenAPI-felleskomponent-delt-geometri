@@ -3,5 +3,5 @@
 public class ToplogyRequest
 {
     public NgisFeature Feature { get; set; }
-    public IEnumerable<NgisFeature> AffectedFeatures { get; set; }
+    public List<NgisFeature> AffectedFeatures { get; set; } = new List<NgisFeature>();
 }
