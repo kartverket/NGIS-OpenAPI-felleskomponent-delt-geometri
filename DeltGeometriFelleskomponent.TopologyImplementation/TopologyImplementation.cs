@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
+using NetTopologySuite.Operation.Polygonize;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
@@ -87,13 +88,29 @@ public class TopologyImplementation: ITopologyImplementation
 
     private NgisFeature CreatePolygonFromLines(string type, List<NgisFeature> lineFeatures)
     {
-        //TODO Support multiple linestrings and order
+        //TODO use  Polygonizer polygonizer for all operations?
 
-        var line = lineFeatures.First();
+        Polygon polygon;
+        if (lineFeatures.Count > 1)
+        {
+            // Now supports  multiple linestrings and order
+            Polygonizer polygonizer = new Polygonizer();
+            foreach (var lineFeature in lineFeatures)
+            {
+                polygonizer.Add(lineFeature.Geometry);
+            }
 
-        var linearRing = new LinearRing(line.Geometry?.Coordinates);
+            polygon = (Polygon)polygonizer.GetPolygons().First();
+        }
+        else
+        {
+            var line = lineFeatures.First();
 
-        var polygon = new Polygon(linearRing);
+            var linearRing = new LinearRing(line.Geometry?.Coordinates);
+
+            polygon = new Polygon(linearRing);
+            //var polygon = new Polygon(linearRing);
+        }
 
         var lokalId = Guid.NewGuid().ToString();
 
