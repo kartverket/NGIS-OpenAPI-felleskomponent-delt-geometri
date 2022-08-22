@@ -58,10 +58,10 @@ public class TopologyImplementation: ITopologyImplementation
                 }
             }
 
-            var resultPolygon = CreatePolygonFromLines(request.Feature.Type, referredFeatures);
+            var resultPolygon = CreatePolygonFromLines(request.Feature.Type, referredFeatures, request.Feature.Centroid, out var isValid);
 
             result.AffectedFeatures.Add(resultPolygon);
-            result.IsValid = true;
+            result.IsValid = isValid; // true;
 
         }
         else
@@ -86,7 +86,8 @@ public class TopologyImplementation: ITopologyImplementation
         throw new NotImplementedException();
     }
 
-    private NgisFeature CreatePolygonFromLines(string type, List<NgisFeature> lineFeatures)
+    
+    private NgisFeature CreatePolygonFromLines(string type, List<NgisFeature> lineFeatures, Point? centroid, out bool isValid)
     {
         //TODO use  Polygonizer polygonizer for all operations?
 
@@ -101,6 +102,15 @@ public class TopologyImplementation: ITopologyImplementation
             }
 
             polygon = (Polygon)polygonizer.GetPolygons().First();
+
+            isValid = polygon.IsValid;
+
+            if (centroid != null)
+            {
+                var inside = polygon.Contains(centroid);
+                Console.WriteLine(": Point is inside polygon:{0}", inside);
+                isValid = inside;
+            }
         }
         else
         {
@@ -110,6 +120,7 @@ public class TopologyImplementation: ITopologyImplementation
 
             polygon = new Polygon(linearRing);
             //var polygon = new Polygon(linearRing);
+            isValid = polygon.IsValid;
         }
 
         var lokalId = Guid.NewGuid().ToString();
@@ -145,4 +156,15 @@ public class TopologyImplementation: ITopologyImplementation
 
         return lineFeature;
     }
+
+    //private IList<IPoint> Contains(IGeometry geom, IEnumerable<IPoint> points)
+    //{
+    //    var prepGeom = new NetTopologySuite.Geometries.Prepared.PreparedGeometryFactory().Prepare(geom);
+    //    var res = new List<IPoint>();
+    //    foreach (var point in points)
+    //    {
+    //        if (prepGeom.Contains(point)) res.Add(point);
+    //    }
+    //    return res;
+    //}
 }

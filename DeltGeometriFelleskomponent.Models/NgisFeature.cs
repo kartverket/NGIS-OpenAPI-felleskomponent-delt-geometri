@@ -13,5 +13,6 @@ public class NgisFeature
     //a list of references to other geomeries this feature is made up uf
     public List<string> References { get; set; } = new List<string>();
     public Operation Operation { get; set; }
+    public Point? Centroid { get; set; }
 }
 

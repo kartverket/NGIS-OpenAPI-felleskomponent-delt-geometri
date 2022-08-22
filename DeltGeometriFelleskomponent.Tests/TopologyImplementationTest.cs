@@ -146,9 +146,13 @@ namespace DeltGeometriFelleskomponent.Tests
             GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(ordered:true);
             output.WriteLine("GetLinesAndPolygonWhenCreatingPolygonFrom2Lines with multiple unordered linestrings");
             GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(ordered:false);
+
+            output.WriteLine("GetLinesAndPolygonWhenCreatingPolygonFrom2Lines with multiple unordered linestrings and check for Point Inside Area");
+            GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(ordered: false, insideCheck:true);
         }
         
-        private void GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(bool ordered=true)
+        private void GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(bool ordered=true, bool insideCheck = false)
+        // private void GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(bool ordered=true, double? x=null, double? y=null)
         {
             var id = Guid.NewGuid().ToString();
 
@@ -202,6 +206,15 @@ namespace DeltGeometriFelleskomponent.Tests
                 Type = "KaiområdeGrense"
             };
 
+            Point? centroid = null;
+            if (insideCheck)
+            {
+                // Check if polygon  entirely contains the given coordinate location
+                centroid = new Point(new Coordinate(50, 50));
+
+            }
+
+        
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
                 Feature = new NgisFeature()
@@ -209,7 +222,8 @@ namespace DeltGeometriFelleskomponent.Tests
                     Geometry = new Polygon(null),
                     Type = "Kaiområde",
                     Operation = Operation.Create,
-                    References = new List<string>() { id, id2 }
+                    References = new List<string>() { id, id2 },
+                    Centroid = centroid
                 },
                 AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2 }
             });
@@ -241,6 +255,13 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal(2, feature3.References!.Count);
             Assert.Equal(feature3.References!.First(), feature1.LocalId);
             Assert.Equal(feature3.References!.Last(), feature2.LocalId);
+
+            if (insideCheck)
+            {
+                output.WriteLine("InsideCheck for Point Inside Area:{0}", res.IsValid);
+                // Assert.True(res.IsValid);
+            }
         }
+      
     }
 }
