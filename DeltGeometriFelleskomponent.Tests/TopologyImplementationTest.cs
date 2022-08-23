@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using DeltGeometriFelleskomponent.Models;
 using DeltGeometriFelleskomponent.TopologyImplementation;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
+using NetTopologySuite.Algorithm;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Geometries.Implementation;
 using Xunit;
@@ -262,6 +263,125 @@ namespace DeltGeometriFelleskomponent.Tests
                 // Assert.True(res.IsValid);
             }
         }
-      
+
+        [Fact]
+
+        void CheckTopologyForRecreateAreaIsValid()
+        {
+            output.WriteLine("CheckTopologyForRecreateAreaIsValid valid geometries");
+            Check2TopologyForRecreateArea(ordered: true, inputValid: true);
+
+            output.WriteLine("CheckTopologyForRecreateAreaIsValid invalid geometries");
+            Check2TopologyForRecreateArea(ordered: true, inputValid: false);
+        }
+
+        private void Check2TopologyForRecreateArea(bool ordered = true, bool inputValid = true)
+        {
+            var id = Guid.NewGuid().ToString();
+
+            LineString linestring;
+            if (inputValid)
+            {
+                linestring = new LineString(new[]
+                {
+                    new Coordinate(0, 0),
+                    new Coordinate(100, 0),
+                    new Coordinate(100, 100)
+                });
+            }
+            else
+            {
+                linestring = new LineString(new[]
+                {
+                    new Coordinate(0, 0),
+                    new Coordinate(100, 0),
+                    new Coordinate(100, 200)
+                });
+
+            }
+
+
+            var lineFeature = new NgisFeature()
+            {
+                Geometry = linestring,
+                LocalId = id,
+                Operation = Operation.Create,
+                Type = "KaiområdeGrense"
+            };
+
+
+            var id2 = Guid.NewGuid().ToString();
+
+            LineString linestring2;
+            if (ordered)
+            {
+                if (inputValid)
+                {
+                    linestring2 = new LineString(new[]
+                    {
+                        new Coordinate(100, 100),
+                        new Coordinate(0, 100),
+                        new Coordinate(0, 0)
+                    });
+                }
+                else
+                {
+                    linestring2 = new LineString(new[]
+                    {
+                        new Coordinate(200, 100),
+                        new Coordinate(0, 100),
+                        new Coordinate(0, 0)
+                    });
+                }
+            }
+            else
+            {
+                // Unordered direction (could use linestring2.reverse)
+                linestring2 = new LineString(new[]
+                {
+                    new Coordinate(0, 0),
+                    new Coordinate(0, 100),
+                    new Coordinate(100, 100)
+                });
+
+            }
+
+
+            var lineFeature2 = new NgisFeature()
+            {
+                Geometry = linestring2,
+                LocalId = id2,
+                Operation = Operation.Create,
+                Type = "KaiområdeGrense"
+            };
+
+            Point? centroid = null;
+
+            var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
+            {
+                Feature = new NgisFeature()
+                {
+                    Geometry = new Polygon(null),
+                    Type = "Kaiområde",
+                    Operation = Operation.Create,
+                    References = new List<string>() { id, id2 },
+                    Centroid = centroid
+                },
+                AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2 }
+            });
+
+            bool hasValidPolygon = false;
+            foreach (var feat in res.AffectedFeatures)
+            {
+                if (feat.Geometry != null && feat.Geometry.GeometryType == "Polygon")
+                {
+                    hasValidPolygon = true;
+                    break;
+
+                }
+            }
+            output.WriteLine("Valid input lines: {0}", hasValidPolygon);
+        }
+
     }
 }

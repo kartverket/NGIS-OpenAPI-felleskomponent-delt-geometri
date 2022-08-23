@@ -91,26 +91,38 @@ public class TopologyImplementation: ITopologyImplementation
     {
         //TODO use  Polygonizer polygonizer for all operations?
 
-        Polygon polygon;
+        Polygon? polygon = null;
         if (lineFeatures.Count > 1)
         {
             // Now supports  multiple linestrings and order
-            Polygonizer polygonizer = new Polygonizer();
+            Polygonizer polygonizer = new Polygonizer(extractOnlyPolygonal:true);
             foreach (var lineFeature in lineFeatures)
             {
                 polygonizer.Add(lineFeature.Geometry);
             }
 
-            polygon = (Polygon)polygonizer.GetPolygons().First();
-
-            isValid = polygon.IsValid;
-
-            if (centroid != null)
+            if (polygonizer.GetPolygons().Count > 0)
             {
-                var inside = polygon.Contains(centroid);
-                Console.WriteLine(": Point is inside polygon:{0}", inside);
-                isValid = inside;
+                polygon = (Polygon)polygonizer.GetPolygons().First();
+                isValid = polygon.IsValid;
+                if (centroid != null)
+                {
+                    var inside = polygon.Contains(centroid);
+                    Console.WriteLine(": Point is inside polygon:{0}", inside);
+                    isValid = inside;
+                }
             }
+            else
+            {
+                isValid = false;
+            }
+            
+            var cutEdges = polygonizer.GetCutEdges();
+            var dangels = polygonizer.GetDangles();
+
+            if (cutEdges.Count > 0 ) Console.WriteLine("cutEdges.Count:{0}",cutEdges.Count);
+            if (dangels.Count > 0) Console.WriteLine("dangels.Count:{0}", dangels.Count);
+
         }
         else
         {
