@@ -8,11 +8,12 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation;
 public class TopologyImplementation: ITopologyImplementation
 {
     public TopologyResponse ResolveReferences(ToplogyRequest request)
-        => request.Feature.Operation switch
+        => request.Feature.Update?.Action switch
         {
             Operation.Create => HandleCreate(request),
-            Operation.Delete => HandleDelete(request),
-            Operation.Update => HandleUpdate(request)
+            Operation.Erase => HandleDelete(request),
+            Operation.Replace => HandleUpdate(request),
+            null => throw new ArgumentException("")
         };
 
     private TopologyResponse HandleCreate(ToplogyRequest request)
@@ -40,13 +41,13 @@ public class TopologyImplementation: ITopologyImplementation
 
             // Polygonet er tomt, altså ønsker brukeren å lage et nytt polygon basert på grenselinjer
 
-            if (request.Feature.References == null) return new TopologyResponse();
+            if (request.Feature.Geometry_Properties.Exterior == null) return new TopologyResponse();
             if (request.AffectedFeatures == null) return new TopologyResponse();
 
-            var affected = request.AffectedFeatures.ToDictionary(a => a.LocalId, a => a);
+            var affected = request.AffectedFeatures.ToDictionary(NgisFeatureHelper.GetLokalId, a => a);
 
             var referredFeatures = new List<NgisFeature>();
-            foreach (var referred in request.Feature.References)
+            foreach (var referred in request.Feature.Geometry_Properties.Exterior)
             {
                 if (affected.TryGetValue(referred, out var referredFeature))
                 {
@@ -57,8 +58,8 @@ public class TopologyImplementation: ITopologyImplementation
                     throw new Exception("Referred feature not present in AffectedFeatures");
                 }
             }
-
-            var resultPolygon = CreatePolygonFromLines(request.Feature.Type, referredFeatures, request.Feature.Centroid, out var isValid);
+            //request.Feature.Centroid
+            var resultPolygon = CreatePolygonFromLines(request.Feature.Type, referredFeatures, null, out var isValid);
 
             result.AffectedFeatures.Add(resultPolygon);
             result.IsValid = isValid; // true;
@@ -127,27 +128,20 @@ public class TopologyImplementation: ITopologyImplementation
         else
         {
             var line = lineFeatures.First();
-
             var linearRing = new LinearRing(line.Geometry?.Coordinates);
-
             polygon = new Polygon(linearRing);
-            //var polygon = new Polygon(linearRing);
             isValid = polygon.IsValid;
         }
 
         var lokalId = Guid.NewGuid().ToString();
+        
+        var polygonFeature = NgisFeatureHelper.CreateFeature(polygon, lokalId);
+        NgisFeatureHelper.SetReferences(polygonFeature,lineFeatures, null);
+        NgisFeatureHelper.SetOperation(polygonFeature, Operation.Create);
 
-        var polygonFeature = new NgisFeature()
-        {
-            Geometry = polygon,
-            LocalId = lokalId,
-            Operation = Operation.Create,
-            Type = type,
-            References = lineFeatures.Select(a => a.LocalId).ToList(),
-        };
+        lineFeatures.ForEach(a => NgisFeatureHelper.SetReferences(a, new List<string>(){lokalId}, null));
 
-        lineFeatures.ForEach(a => a.References.Add(lokalId));
-
+        //set type to type
         return polygonFeature;
     }
 
@@ -155,17 +149,14 @@ public class TopologyImplementation: ITopologyImplementation
     {
         var lokalId = Guid.NewGuid().ToString();
 
-        var lineFeature = new NgisFeature()
-        {
-            Geometry = new LineString(((Polygon)polygonFeature.Geometry).Shell.Coordinates),
-            Operation = Operation.Create,
-            LocalId = lokalId,
-            Type = type,
-            References = new List<string> { polygonFeature.LocalId }
-        };
+        var lineFeature = NgisFeatureHelper.CreateFeature(new LineString(((Polygon)polygonFeature.Geometry).Shell.Coordinates), lokalId);
 
-        polygonFeature.References.Add(lokalId);
+        NgisFeatureHelper.SetReferences(lineFeature, new List<string>(){ lokalId }, null);
+        NgisFeatureHelper.SetOperation(lineFeature, Operation.Create);
 
+        NgisFeatureHelper.SetReferences(polygonFeature, new List<string>(){lokalId}, new List<IEnumerable<string>>());
+
+        //set type to type
         return lineFeature;
     }
 
