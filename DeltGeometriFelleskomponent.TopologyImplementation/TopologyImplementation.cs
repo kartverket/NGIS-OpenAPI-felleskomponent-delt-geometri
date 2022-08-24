@@ -5,7 +5,7 @@ using NetTopologySuite.Operation.Polygonize;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
-public class TopologyImplementation: ITopologyImplementation
+public class TopologyImplementation : ITopologyImplementation
 {
     public TopologyResponse ResolveReferences(ToplogyRequest request)
         => request.Feature.Operation switch
@@ -86,54 +86,49 @@ public class TopologyImplementation: ITopologyImplementation
         throw new NotImplementedException();
     }
 
-    
+
     private NgisFeature CreatePolygonFromLines(string type, List<NgisFeature> lineFeatures, Point? centroid, out bool isValid)
     {
-        //TODO use  Polygonizer polygonizer for all operations?
+        // use  Polygonizer polygonizer for all operations?
 
         Polygon? polygon = null;
-        if (lineFeatures.Count > 1)
+        // Now supports  multiple linestrings and order
+        Polygonizer polygonizer = new Polygonizer(extractOnlyPolygonal: true);
+        foreach (var lineFeature in lineFeatures)
         {
-            // Now supports  multiple linestrings and order
-            Polygonizer polygonizer = new Polygonizer(extractOnlyPolygonal:true);
-            foreach (var lineFeature in lineFeatures)
+            polygonizer.Add(lineFeature.Geometry);
+        }
+
+        if (polygonizer.GetPolygons().Count > 0)
+        {
+            polygon = (Polygon)polygonizer.GetPolygons().First();
+            isValid = polygon.IsValid;
+
+            if (!polygon.Shell.IsCCW)
             {
-                polygonizer.Add(lineFeature.Geometry);
+                // TODO: Check if polygon.Reverse is enough
+                Console.WriteLine("Polygon is not CCW");
+                polygon = (Polygon)polygon.Reverse(); // reverse polygon
             }
 
-            if (polygonizer.GetPolygons().Count > 0)
+            if (centroid != null)
             {
-                polygon = (Polygon)polygonizer.GetPolygons().First();
-                isValid = polygon.IsValid;
-                if (centroid != null)
-                {
-                    var inside = polygon.Contains(centroid);
-                    Console.WriteLine(": Point is inside polygon:{0}", inside);
-                    isValid = inside;
-                }
+                var inside = polygon.Contains(centroid);
+                Console.WriteLine("Point is inside polygon:{0}", inside);
+                isValid = inside;
             }
-            else
-            {
-                isValid = false;
-            }
-            
-            var cutEdges = polygonizer.GetCutEdges();
-            var dangels = polygonizer.GetDangles();
-
-            if (cutEdges.Count > 0 ) Console.WriteLine("cutEdges.Count:{0}",cutEdges.Count);
-            if (dangels.Count > 0) Console.WriteLine("dangels.Count:{0}", dangels.Count);
-
         }
         else
         {
-            var line = lineFeatures.First();
-
-            var linearRing = new LinearRing(line.Geometry?.Coordinates);
-
-            polygon = new Polygon(linearRing);
-            //var polygon = new Polygon(linearRing);
-            isValid = polygon.IsValid;
+            isValid = false;
         }
+
+        var cutEdges = polygonizer.GetCutEdges();
+        var dangels = polygonizer.GetDangles();
+
+        if (cutEdges.Count > 0) Console.WriteLine("cutEdges.Count:{0}", cutEdges.Count);
+        if (dangels.Count > 0) Console.WriteLine("dangels.Count:{0}", dangels.Count);
+
 
         var lokalId = Guid.NewGuid().ToString();
 

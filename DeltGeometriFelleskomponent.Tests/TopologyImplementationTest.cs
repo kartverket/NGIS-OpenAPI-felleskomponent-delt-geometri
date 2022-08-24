@@ -241,27 +241,33 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal("LineString", feature2.Geometry!.GeometryType);
             Assert.Equal(Operation.Create, feature1.Operation);
 
-            var feature3 = res.AffectedFeatures.ElementAt(2); // polygon
+            var featurePolygon = res.AffectedFeatures.ElementAt(2); // polygon
 
-            Assert.Equal("Polygon", feature3.Geometry!.GeometryType);
+            Assert.Equal("Polygon", featurePolygon.Geometry!.GeometryType);
             Assert.Equal(Operation.Create, feature1.Operation);
 
 
             Assert.Single(feature1.References!);
-            Assert.Equal(feature1.References!.First(), feature3.LocalId);
+            Assert.Equal(feature1.References!.First(), featurePolygon.LocalId);
 
             Assert.Single(feature2.References!);
-            Assert.Equal(feature2.References!.First(), feature3.LocalId);
+            Assert.Equal(feature2.References!.First(), featurePolygon.LocalId);
 
-            Assert.Equal(2, feature3.References!.Count);
-            Assert.Equal(feature3.References!.First(), feature1.LocalId);
-            Assert.Equal(feature3.References!.Last(), feature2.LocalId);
+            Assert.Equal(2, featurePolygon.References!.Count);
+            Assert.Equal(featurePolygon.References!.First(), feature1.LocalId);
+            Assert.Equal(featurePolygon.References!.Last(), feature2.LocalId);
 
             if (insideCheck)
             {
                 output.WriteLine("InsideCheck for Point Inside Area:{0}", res.IsValid);
                 // Assert.True(res.IsValid);
             }
+            Assert.Equal(featurePolygon.References!.Last(), feature2.LocalId);
+            
+            var poly = featurePolygon.Geometry;
+            output.WriteLine(poly.ToString());
+
+            
         }
 
         [Fact]
@@ -383,5 +389,154 @@ namespace DeltGeometriFelleskomponent.Tests
             output.WriteLine("Valid input lines: {0}", hasValidPolygon);
         }
 
+        [Fact]
+        public void ReturnsLinesAndPolygonWhenCreatingPolygonFrom2LinesAndHole()
+        {
+            output.WriteLine("GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHole with multiple ordered linestrings");
+            GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHole(ordered: true, insideCheck: false);
+
+        }
+
+        private void GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHole(bool ordered = true, bool insideCheck = false )
+        {
+            var id = Guid.NewGuid().ToString();
+            var linestring = new LineString(new[]
+            {
+                new Coordinate(0, 0),
+                new Coordinate(100, 0),
+                new Coordinate(100, 100)
+            });
+            var lineFeature = new NgisFeature()
+            {
+                Geometry = linestring,
+                LocalId = id,
+                Operation = Operation.Create,
+                Type = "KaiområdeGrense"
+            };
+
+
+            var id2 = Guid.NewGuid().ToString();
+            LineString linestring2;
+            if (ordered)
+            {
+                linestring2 = new LineString(new[]
+                {
+                    new Coordinate(100, 100),
+                    new Coordinate(0, 100),
+                    new Coordinate(0, 0)
+                });
+            }
+            else
+            {
+                // Unordered direction (could use linestring2.reverse)
+                linestring2 = new LineString(new[]
+                {
+                    new Coordinate(0, 0),
+                    new Coordinate(0, 100),
+                    new Coordinate(100, 100)
+                });
+            }
+            var lineFeature2 = new NgisFeature()
+            {
+                Geometry = linestring2,
+                LocalId = id2,
+                Operation = Operation.Create,
+                Type = "KaiområdeGrense"
+            };
+
+            Point? centroid = null;
+            if (insideCheck)
+            {
+                // Check if polygon  entirely contains the given coordinate location
+                centroid = new Point(new Coordinate(50, 50));
+
+            }
+
+            // Add lines that forms a hole
+            var id3 = Guid.NewGuid().ToString();
+            var linestringHole1 = new LineString(new[]
+            {
+                new Coordinate(25, 25),
+                new Coordinate(50, 25),
+                new Coordinate(50, 50)
+            });
+            var lineFeatureHole1 = new NgisFeature()
+            {
+                Geometry = linestringHole1,
+                LocalId = id3,
+                Operation = Operation.Create,
+                Type = "KaiområdeGrense"
+            };
+            // Line 2 to close the hole
+            var id4 = Guid.NewGuid().ToString();
+            var linestringHole2 = new LineString(new[]
+            {
+                new Coordinate(50, 50),
+                new Coordinate(25, 50),
+                new Coordinate(25, 25)
+            });
+            var lineFeatureHole2 = new NgisFeature()
+            {
+                Geometry = linestringHole2,
+                LocalId = id4,
+                Operation = Operation.Create,
+                Type = "KaiområdeGrense"
+            };
+
+
+
+            var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
+            {
+                Feature = new NgisFeature()
+                {
+                    Geometry = new Polygon(null),
+                    Type = "Kaiområde",
+                    Operation = Operation.Create,
+                    References = new List<string>() { id, id2, id3, id4 },
+                    Centroid = centroid
+                },
+                AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2, lineFeatureHole1, lineFeatureHole2 }
+            });
+
+            Assert.Equal(5, res.AffectedFeatures.Count());
+            var feature1 = res.AffectedFeatures.First();
+
+            Assert.Equal("LineString", feature1.Geometry!.GeometryType);
+            Assert.Equal(id, feature1.LocalId);
+            Assert.Equal(Operation.Create, feature1.Operation);
+
+            var feature2 = res.AffectedFeatures.ElementAt(1);
+
+            Assert.Equal("LineString", feature2.Geometry!.GeometryType);
+            Assert.Equal(Operation.Create, feature1.Operation);
+
+            var featurePolygon = res.AffectedFeatures.ElementAt(4); // polygon
+
+            Assert.Equal("Polygon", featurePolygon.Geometry!.GeometryType);
+            Assert.Equal(Operation.Create, feature1.Operation);
+
+
+            Assert.Single(feature1.References!);
+            Assert.Equal(feature1.References!.First(), featurePolygon.LocalId);
+
+            Assert.Single(feature2.References!);
+            Assert.Equal(feature2.References!.First(), featurePolygon.LocalId);
+
+            Assert.Equal(4, featurePolygon.References!.Count);
+            Assert.Equal(featurePolygon.References!.First(), feature1.LocalId);
+            Assert.Equal(featurePolygon.References!.Last(), lineFeatureHole2.LocalId);
+
+            if (insideCheck)
+            {
+                output.WriteLine("InsideCheck for Point Inside Area:{0}", res.IsValid);
+                // Assert.True(res.IsValid);
+            }
+            Assert.Equal(featurePolygon.References!.Last(), lineFeatureHole2.LocalId);
+
+            var poly = featurePolygon.Geometry;
+            output.WriteLine(poly.ToString());
+
+
+        }
     }
 }
