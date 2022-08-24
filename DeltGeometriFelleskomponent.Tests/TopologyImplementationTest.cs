@@ -34,15 +34,15 @@ namespace DeltGeometriFelleskomponent.Tests
 
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
-                Feature = new NgisFeature() { Geometry = point, LocalId = id, Operation = Operation.Create },
+                Feature = NgisFeatureHelper.CreateFeature(point, id, Operation.Create)
                 
             });
 
             Assert.Single(res.AffectedFeatures);
             var feature = res.AffectedFeatures.First();
             Assert.Equal(point,feature.Geometry);
-            Assert.Equal(id, feature.LocalId);
-            Assert.Equal(Operation.Create, feature.Operation);
+            Assert.Equal(id, NgisFeatureHelper.GetLokalId(feature));
+            Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature));
         }
 
         [Fact]
@@ -61,29 +61,25 @@ namespace DeltGeometriFelleskomponent.Tests
             
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
-                Feature = new NgisFeature() { 
-                    Geometry = polygon, 
-                    LocalId = id, 
-                    Type = "Kaiområde",
-                    Operation = Operation.Create 
-                },
-
+                //Type = "Kaiområde",
+                Feature = NgisFeatureHelper.CreateFeature(polygon, id, Operation.Create)
             });
 
             Assert.Equal(2, res.AffectedFeatures.Count());
             var feature1 = res.AffectedFeatures.First();
 
             Assert.Equal("Polygon", feature1.Geometry!.GeometryType);
-            Assert.Equal(id, feature1.LocalId);
-            Assert.Equal(Operation.Create, feature1.Operation);
+            Assert.Equal(id, NgisFeatureHelper.GetLokalId(feature1));
+            Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature1));
 
             var feature2 = res.AffectedFeatures.ElementAt(1);
 
             Assert.Equal("LineString", feature2.Geometry!.GeometryType);
-            Assert.Equal(Operation.Create, feature1.Operation);
+            Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature2));
 
-            Assert.Single(feature1.References!);
-            Assert.Equal(feature1.References!.First(), feature2.LocalId);
+            var references = NgisFeatureHelper.GetExteriors(feature1);
+            Assert.Single(references);
+            Assert.Equal(references.First(), NgisFeatureHelper.GetLokalId(feature2));
         }
 
 
@@ -104,23 +100,13 @@ namespace DeltGeometriFelleskomponent.Tests
 
             var linestring = new LineString(linearRing.Coordinates);
 
-            var lineFeature = new NgisFeature()
-            {
-                Geometry = linestring,
-                LocalId = id,
-                Operation = Operation.Create,
-                Type = "KaiområdeGrense"
-            };
+            //Type = "KaiområdeGrense"
+            var lineFeature = NgisFeatureHelper.CreateFeature(linestring, id, Operation.Create);
 
+            //Type = "Kaiområde",
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
-                Feature = new NgisFeature()
-                {
-                    Geometry = new Polygon(null),
-                    Type = "Kaiområde",
-                    Operation = Operation.Create,
-                    References = new List<string>() { id}
-                },
+                Feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>(){id}, new List<IEnumerable<string>>()),
                 AffectedFeatures = new List<NgisFeature>() { lineFeature}
             });
 
@@ -128,16 +114,17 @@ namespace DeltGeometriFelleskomponent.Tests
             var feature1 = res.AffectedFeatures.First();
 
             Assert.Equal("LineString", feature1.Geometry!.GeometryType);
-            Assert.Equal(id, feature1.LocalId);
-            Assert.Equal(Operation.Create, feature1.Operation);
+            Assert.Equal(id, NgisFeatureHelper.GetLokalId(feature1));
+            Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature1));
 
             var feature2 = res.AffectedFeatures.ElementAt(1);
 
             Assert.Equal("Polygon", feature2.Geometry!.GeometryType);
-            Assert.Equal(Operation.Create, feature1.Operation);
+            Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature2));
 
-            Assert.Single(feature1.References!);
-            Assert.Equal(feature1.References!.First(), feature2.LocalId);
+            var references = NgisFeatureHelper.GetExteriors(feature1);
+            Assert.Single(references);
+            Assert.Equal(references.First(), NgisFeatureHelper.GetLokalId(feature2));
         }
 
         [Fact]
@@ -164,14 +151,9 @@ namespace DeltGeometriFelleskomponent.Tests
                 new Coordinate(100, 100)
             });
 
-
-            var lineFeature = new NgisFeature()
-            {
-                Geometry = linestring,
-                LocalId = id,
-                Operation = Operation.Create,
-                Type = "KaiområdeGrense"
-            };
+            //Type = "KaiområdeGrense"
+            var lineFeature = NgisFeatureHelper.CreateFeature(linestring, id, Operation.Create);
+            
 
 
             var id2 = Guid.NewGuid().ToString();
@@ -197,15 +179,9 @@ namespace DeltGeometriFelleskomponent.Tests
                 });
 
             }
-
-
-            var lineFeature2 = new NgisFeature()
-            {
-                Geometry = linestring2,
-                LocalId = id2,
-                Operation = Operation.Create,
-                Type = "KaiområdeGrense"
-            };
+            // Type = "KaiområdeGrense"
+            var lineFeature2 = NgisFeatureHelper.CreateFeature(linestring2, id2, Operation.Create);
+            
 
             Point? centroid = null;
             if (insideCheck)
@@ -214,18 +190,12 @@ namespace DeltGeometriFelleskomponent.Tests
                 centroid = new Point(new Coordinate(50, 50));
 
             }
-
-        
+            // Centroid = centroid
+            //Type = "Kaiområde"
+            var feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>(){id, id2}, new List<IEnumerable<string>>());
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
-                Feature = new NgisFeature()
-                {
-                    Geometry = new Polygon(null),
-                    Type = "Kaiområde",
-                    Operation = Operation.Create,
-                    References = new List<string>() { id, id2 },
-                    Centroid = centroid
-                },
+                Feature = feature,
                 AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2 }
             });
 
@@ -233,29 +203,33 @@ namespace DeltGeometriFelleskomponent.Tests
             var feature1 = res.AffectedFeatures.First();
 
             Assert.Equal("LineString", feature1.Geometry!.GeometryType);
-            Assert.Equal(id, feature1.LocalId);
-            Assert.Equal(Operation.Create, feature1.Operation);
+            Assert.Equal(id, NgisFeatureHelper.GetLokalId(feature1));
+            Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature1));
 
             var feature2 = res.AffectedFeatures.ElementAt(1);
 
             Assert.Equal("LineString", feature2.Geometry!.GeometryType);
-            Assert.Equal(Operation.Create, feature1.Operation);
+            Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature1));
 
             var feature3 = res.AffectedFeatures.ElementAt(2); // polygon
 
             Assert.Equal("Polygon", feature3.Geometry!.GeometryType);
-            Assert.Equal(Operation.Create, feature1.Operation);
+            Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature1));
 
 
-            Assert.Single(feature1.References!);
-            Assert.Equal(feature1.References!.First(), feature3.LocalId);
+            var feature1References = NgisFeatureHelper.GetExteriors(feature1);
+            Assert.Single(feature1References);
+            Assert.Equal(feature1References.First(), NgisFeatureHelper.GetLokalId(feature3));
 
-            Assert.Single(feature2.References!);
-            Assert.Equal(feature2.References!.First(), feature3.LocalId);
+            var feature2References = NgisFeatureHelper.GetExteriors(feature2);
+            Assert.Single(feature2References);
+            Assert.Equal(feature2References.First(), NgisFeatureHelper.GetLokalId(feature3));
 
-            Assert.Equal(2, feature3.References!.Count);
-            Assert.Equal(feature3.References!.First(), feature1.LocalId);
-            Assert.Equal(feature3.References!.Last(), feature2.LocalId);
+
+            var feature3References = NgisFeatureHelper.GetExteriors(feature3);
+            Assert.Equal(2, feature3References.Count);
+            Assert.Equal(feature3References.First(), NgisFeatureHelper.GetLokalId(feature1));
+            Assert.Equal(feature3References.Last(), NgisFeatureHelper.GetLokalId(feature2));
 
             if (insideCheck)
             {
@@ -300,15 +274,9 @@ namespace DeltGeometriFelleskomponent.Tests
 
             }
 
-
-            var lineFeature = new NgisFeature()
-            {
-                Geometry = linestring,
-                LocalId = id,
-                Operation = Operation.Create,
-                Type = "KaiområdeGrense"
-            };
-
+            //Type = "KaiområdeGrense"
+            var lineFeature = NgisFeatureHelper.CreateFeature(linestring, id, Operation.Create);
+            
 
             var id2 = Guid.NewGuid().ToString();
 
@@ -346,27 +314,17 @@ namespace DeltGeometriFelleskomponent.Tests
 
             }
 
-
-            var lineFeature2 = new NgisFeature()
-            {
-                Geometry = linestring2,
-                LocalId = id2,
-                Operation = Operation.Create,
-                Type = "KaiområdeGrense"
-            };
+            //Type = "KaiområdeGrense"
+            var lineFeature2 = NgisFeatureHelper.CreateFeature(linestring2, id2, Operation.Create);
+            
 
             Point? centroid = null;
 
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
-                Feature = new NgisFeature()
-                {
-                    Geometry = new Polygon(null),
-                    Type = "Kaiområde",
-                    Operation = Operation.Create,
-                    References = new List<string>() { id, id2 },
-                    Centroid = centroid
-                },
+                //Type = "Kaiområde",
+                //Centroid = centroid
+                Feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>(){id, id2}, new List<IEnumerable<string>>()),
                 AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2 }
             });
 
