@@ -7,6 +7,8 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
 public class TopologyImplementation : ITopologyImplementation
 {
+    private readonly PolygonCreator _polygonCreator = new();
+
     public TopologyResponse ResolveReferences(ToplogyRequest request)
         => request.Feature.Update?.Action switch
         {
@@ -85,17 +87,9 @@ public class TopologyImplementation : ITopologyImplementation
             result.AffectedFeatures.Add(resultPolygon);
             result.IsValid = isValid; // true;
 
+            return result;
         }
-        else
-        {
-            var resultLine = CreateLineFromPolyon($"{request.Feature.Type}Grense", request.Feature);
-
-            result.AffectedFeatures.Add(request.Feature);
-            result.AffectedFeatures.Add(resultLine);
-            result.IsValid = true;
-        }
-
-        return result;
+        return _polygonCreator.CreatePolygonFromGeometry(request);
     }
 
     private TopologyResponse HandleDelete(ToplogyRequest request)
@@ -182,20 +176,7 @@ public class TopologyImplementation : ITopologyImplementation
     //    //lage feature med polygonGEometry og exterior og interiors
     //}
 
-    private NgisFeature CreateLineFromPolyon(string type, NgisFeature polygonFeature)
-    {
-        var lokalId = Guid.NewGuid().ToString();
-
-        var lineFeature = NgisFeatureHelper.CreateFeature(new LineString(((Polygon)polygonFeature.Geometry).Shell.Coordinates), lokalId);
-
-        NgisFeatureHelper.SetReferences(lineFeature, new List<string>(){ lokalId }, null);
-        NgisFeatureHelper.SetOperation(lineFeature, Operation.Create);
-
-        NgisFeatureHelper.SetReferences(polygonFeature, new List<string>(){lokalId}, new List<IEnumerable<string>>());
-
-        //set type to type
-        return lineFeature;
-    }
+    
 
     //private IList<IPoint> Contains(IGeometry geom, IEnumerable<IPoint> points)
     //{

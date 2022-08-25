@@ -6,10 +6,15 @@ namespace DeltGeometriFelleskomponent.Models;
 public static class NgisFeatureHelper
 {
 
-    public static string GetLokalId(NgisFeature feature)
+    public static string? GetLokalId(NgisFeature feature)
     {
+        if (!feature.Properties.Exists("identifikasjon"))
+        {
+            return null;
+        }
+
         var identifikasjon = (IAttributesTable) feature.Properties["identifikasjon"];
-        return (string) identifikasjon["lokalId"];
+        return  (string)identifikasjon["lokalId"];
     }
 
     public static Operation? GetOperation(NgisFeature feature)
@@ -67,6 +72,37 @@ public static class NgisFeatureHelper
     {
         feature.Update ??= new UpdateAction();
         feature.Update.Action = operation;
+    }
+
+    public static void EnsureLocalId(NgisFeature feature)
+    {
+        if (GetLokalId(feature) == null)
+        {
+            SetLokalId(feature, Guid.NewGuid().ToString());
+        }
+    }
+
+    public static void SetLokalId(NgisFeature feature, string lokalId)
+    {
+        //This just looks plain stupid, why copy the attributes table?
+        //well, we are using NetTopologySuite.IO.GeoJSON4STJ for geojson (de)serialization, 
+        //and for some reason that implementation provides its own Attributes table: StjAttributesTable
+        //this does not support setting attributes
+        // as can be seen here: https://github.com/NetTopologySuite/NetTopologySuite.IO.GeoJSON/blob/77aa684748086d741d8a15db2b089b6b9ddf0848/src/NetTopologySuite.IO.GeoJSON4STJ/Converters/StjAttributesTable.cs#L29
+        var props = feature.Properties.GetNames().Aggregate(new AttributesTable(), (acc, key) =>
+        {
+            acc.Add(key, feature.Properties.GetOptionalValue(key));
+            return acc;
+        } );
+
+        if (!props.Exists("identifikasjon"))
+        {
+            props.Add("identifikasjon",new AttributesTable());
+        }
+        ((IAttributesTable)props["identifikasjon"]).Add("lokalId", lokalId);
+
+        feature.Properties = props;
+        
     }
 
 }
