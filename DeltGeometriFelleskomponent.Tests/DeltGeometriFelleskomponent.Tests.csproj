@@ -33,6 +33,9 @@
     <None Update="Examples\polygon_replace.geojson">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Examples\polygon_with_hole_create.geojson">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

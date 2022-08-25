@@ -20,21 +20,21 @@ public static class NgisFeatureHelper
     public static Operation? GetOperation(NgisFeature feature)
         => feature.Update?.Action;
 
-    public static NgisFeature CreateFeature(Geometry geometry, string? lokalId)
+    public static NgisFeature CreateFeature(Geometry geometry, string? lokalId = null)
         => new ()
         {
             Geometry = geometry,
-            Properties = lokalId != null ?new AttributesTable(new Dictionary<string, object>()
+            Properties = new AttributesTable(new Dictionary<string, object>()
             {
                 {
                     "identifikasjon", new AttributesTable(new Dictionary<string, object>()
                     {
                         {
-                            "lokalId", lokalId
+                            "lokalId", lokalId ?? Guid.NewGuid().ToString()
                         }
                     })
                 }
-            }) : new AttributesTable()
+            })
         };
 
     public static NgisFeature CreateFeature(Geometry geometry, string? lokalId, Operation operation)
@@ -50,13 +50,30 @@ public static class NgisFeatureHelper
         SetReferences(feature, exterior, interiors);
         return feature;
     }
-    
-    
-    public static void SetReferences(NgisFeature feature, IEnumerable<string> exterior, IEnumerable<IEnumerable<string>>? interiors)
+
+    public static void SetInterior(NgisFeature feature, IEnumerable<IEnumerable<string>> interiors)
     {
         feature.Geometry_Properties ??= new GeometryProperties();
-        feature.Geometry_Properties.Exterior = exterior.ToList();
-        feature.Geometry_Properties.Interiors = interiors?.Select(i => i.ToList()).ToList();
+        feature.Geometry_Properties!.Interiors = interiors.Select(i => i.ToList()).ToList();
+    }
+
+    public static void SetInterior(NgisFeature feature, IEnumerable<IEnumerable<NgisFeature>> interiors)
+        => SetInterior(feature, interiors.Select(i => i.Select(GetLokalId).OfType<string>()));
+
+    public static void SetExterior(NgisFeature feature, IEnumerable<string> exterior)  {
+        feature.Geometry_Properties ??= new GeometryProperties();
+        feature.Geometry_Properties!.Exterior = exterior.ToList();
+    }
+    public static void SetExterior(NgisFeature feature, IEnumerable<NgisFeature> exterior)
+        => SetExterior(feature, exterior.Select(GetLokalId).OfType<string>());
+
+    public static void SetReferences(NgisFeature feature, IEnumerable<string> exterior, IEnumerable<IEnumerable<string>>? interiors)
+    {
+        SetExterior(feature, exterior);
+        if (interiors != null)
+        {
+            SetInterior(feature, interiors);
+        }
     }
 
     public static List<string> GetExteriors(NgisFeature feature) => feature.Geometry_Properties?.Exterior ?? new List<string>();
@@ -65,8 +82,8 @@ public static class NgisFeatureHelper
 
     public static void SetReferences(NgisFeature feature, IEnumerable<NgisFeature> exterior,
         IEnumerable<IEnumerable<NgisFeature>>? interiors)
-        => SetReferences(feature, exterior.Select(GetLokalId),
-            interiors?.Select(i => i.Select(GetLokalId)));
+        => SetReferences(feature, exterior.Select(GetLokalId).OfType<string>(),
+            interiors?.Select(i => i.Select(GetLokalId).OfType<string>()));
 
     public static void SetOperation(NgisFeature feature, Operation operation)
     {
