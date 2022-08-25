@@ -45,8 +45,8 @@ public static class NgisFeatureHelper
         SetReferences(feature, exterior, interiors);
         return feature;
     }
-
-
+    
+    
     public static void SetReferences(NgisFeature feature, IEnumerable<string> exterior, IEnumerable<IEnumerable<string>>? interiors)
     {
         feature.Geometry_Properties ??= new GeometryProperties();

@@ -58,6 +58,27 @@ public class TopologyImplementation : ITopologyImplementation
                     throw new Exception("Referred feature not present in AffectedFeatures");
                 }
             }
+            // Her er feilen med hull, mangler interiors
+            if (request.Feature.Geometry_Properties.Interiors != null && request.Feature.Geometry_Properties.Interiors.Count > 0)
+            {
+                foreach (var hole in request.Feature.Geometry_Properties.Interiors)
+                {
+
+                    foreach (var referred in hole)
+                    {
+                        if (affected.TryGetValue(referred, out var referredFeature))
+                        {
+                            referredFeatures.Add(referredFeature);
+                        }
+                        else
+                        {
+                            throw new Exception("Referred feature not present in AffectedFeatures");
+                        }
+                    }
+                }
+            }
+
+
             //request.Feature.Centroid
             var resultPolygon = CreatePolygonFromLines(request.Feature.Type, referredFeatures, null, out var isValid);
 
@@ -90,7 +111,7 @@ public class TopologyImplementation : ITopologyImplementation
 
     private NgisFeature CreatePolygonFromLines(string type, List<NgisFeature> lineFeatures, Point? centroid, out bool isValid)
     {
-        // use  Polygonizer polygonizer for all operations?
+        // use  Polygonizer polygonizer for all operations
 
         Polygon? polygon = null;
         // Now supports  multiple linestrings and order
@@ -132,7 +153,10 @@ public class TopologyImplementation : ITopologyImplementation
 
 
         var lokalId = Guid.NewGuid().ToString();
-        
+
+
+        // Her er feil 2 med hull, mangler interiors, må bruke denne ?:
+        // public static NgisFeature CreateFeature(Geometry geometry, string lokalId, Operation operation, IEnumerable<string> exterior, IEnumerable<IEnumerable<string>>? interiors)
         var polygonFeature = NgisFeatureHelper.CreateFeature(polygon, lokalId);
         NgisFeatureHelper.SetReferences(polygonFeature,lineFeatures, null);
         NgisFeatureHelper.SetOperation(polygonFeature, Operation.Create);
@@ -142,6 +166,21 @@ public class TopologyImplementation : ITopologyImplementation
         //set type to type
         return polygonFeature;
     }
+
+    // TODO: For å håndtere hull
+    //public TopologyResponse CreatePolygonFromLines(List<NgisFeature> lineFeatures, Point? centroid)
+    //{
+    //    var a = lineFeatures.Select(f => (f.Geometry, NgisFeatureHelper.GetLokalId(f)));
+    //    //if (a.Any((geom, id) => geom.))
+    
+    //    //1. hent ut geometrier
+    //    //2. legg id på geometri
+    //    //3. lag polygon
+
+
+
+    //    //lage feature med polygonGEometry og exterior og interiors
+    //}
 
     private NgisFeature CreateLineFromPolyon(string type, NgisFeature polygonFeature)
     {
