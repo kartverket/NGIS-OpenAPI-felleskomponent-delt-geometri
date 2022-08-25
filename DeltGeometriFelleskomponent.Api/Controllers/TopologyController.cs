@@ -18,25 +18,31 @@ namespace DeltGeometriFelleskomponent.Api.Controllers
         }
 
         /// <summary>
-        /// Creates a TodoItem.
+        /// Transform the geometry into something that NgisApi will accept
         /// </summary>
         /// <remarks>
-        /// Sample request 1:
+        /// Example creating a polygon from geometry:
         ///
-        ///     {
-        ///       "feature": {
-        ///         "geometry": {
-        ///                "type": "Polygon",
-        ///                "coordinates": [
-        ///                  [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
-        ///                    [100.0, 1.0], [100.0, 0.0] ]
-        ///                  ]
-        ///              },
-        ///         "type": "Kaiområde",
-        ///         "localId": "7d570c32-f1e4-4546-be72-23b865c2efe9",
-        ///         "operation": "Create"
-        ///       }
-        ///     }
+        ///{
+        ///  "type": "Feature",
+        ///    "geometry": {
+        ///      "type": "Polygon",
+        ///      "coordinates": [
+        ///        [
+        ///          [10.394096374511719, 63.42625302685023],
+        ///          [10.418815612792969, 63.40474303024033],
+        ///          [10.462417602539062, 63.431781560959024],
+        ///          [10.394096374511719, 63.42625302685023],
+        ///        ]
+        ///      ]
+        ///    },
+        ///    "properties": {
+        ///      "test":  "test"
+        ///    },
+        ///    "update":{
+        ///      "action":"Create"
+        ///    }
+        ///}
         ///     
         /// Sample request 2:
         /// 
