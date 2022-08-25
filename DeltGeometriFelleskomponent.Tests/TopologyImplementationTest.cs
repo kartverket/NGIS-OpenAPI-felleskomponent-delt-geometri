@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
 using DeltGeometriFelleskomponent.Models;
 using DeltGeometriFelleskomponent.TopologyImplementation;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
-using NetTopologySuite.Algorithm;
 using NetTopologySuite.Geometries;
-using NetTopologySuite.Geometries.Implementation;
 using Xunit;
 using Xunit.Abstractions;
 
