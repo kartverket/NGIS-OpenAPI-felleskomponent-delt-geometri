@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Data.SqlTypes;
+using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using DeltGeometriFelleskomponent.Models;
@@ -35,12 +38,12 @@ namespace DeltGeometriFelleskomponent.Tests
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
                 Feature = NgisFeatureHelper.CreateFeature(point, id, Operation.Create)
-                
+
             });
 
             Assert.Single(res.AffectedFeatures);
             var feature = res.AffectedFeatures.First();
-            Assert.Equal(point,feature.Geometry);
+            Assert.Equal(point, feature.Geometry);
             Assert.Equal(id, NgisFeatureHelper.GetLokalId(feature));
             Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature));
         }
@@ -50,15 +53,15 @@ namespace DeltGeometriFelleskomponent.Tests
         {
             var linearRing = new LinearRing(new[]
             {
-                new Coordinate(0, 0), 
-                new Coordinate(0, 1), 
+                new Coordinate(0, 0),
+                new Coordinate(0, 1),
                 new Coordinate(1, 1),
                 new Coordinate(1, 0),
                 new Coordinate(0, 0),
             });
             var polygon = new Polygon(linearRing);
             var id = Guid.NewGuid().ToString();
-            
+
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
                 //Type = "Kaiområde",
@@ -106,8 +109,8 @@ namespace DeltGeometriFelleskomponent.Tests
             //Type = "Kaiområde",
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
-                Feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>(){id}, new List<IEnumerable<string>>()),
-                AffectedFeatures = new List<NgisFeature>() { lineFeature}
+                Feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id }, new List<IEnumerable<string>>()),
+                AffectedFeatures = new List<NgisFeature>() { lineFeature }
             });
 
             Assert.Equal(2, res.AffectedFeatures.Count());
@@ -131,15 +134,15 @@ namespace DeltGeometriFelleskomponent.Tests
         public void ReturnsLinesAndPolygonWhenCreatingPolygonFrom2Lines()
         {
             output.WriteLine("GetLinesAndPolygonWhenCreatingPolygonFrom2Lines with multiple ordered linestrings");
-            GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(ordered:true);
+            GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(ordered: true);
             output.WriteLine("GetLinesAndPolygonWhenCreatingPolygonFrom2Lines with multiple unordered linestrings");
-            GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(ordered:false);
+            GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(ordered: false);
 
             output.WriteLine("GetLinesAndPolygonWhenCreatingPolygonFrom2Lines with multiple unordered linestrings and check for Point Inside Area");
-            GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(ordered: false, insideCheck:true);
+            GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(ordered: false, insideCheck: true);
         }
-        
-        private void GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(bool ordered=true, bool insideCheck = false)
+
+        private void GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(bool ordered = true, bool insideCheck = false)
         // private void GetLinesAndPolygonWhenCreatingPolygonFrom2Lines(bool ordered=true, double? x=null, double? y=null)
         {
             var id = Guid.NewGuid().ToString();
@@ -153,7 +156,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
             //Type = "KaiområdeGrense"
             var lineFeature = NgisFeatureHelper.CreateFeature(linestring, id, Operation.Create);
-            
+
 
 
             var id2 = Guid.NewGuid().ToString();
@@ -181,7 +184,7 @@ namespace DeltGeometriFelleskomponent.Tests
             }
             // Type = "KaiområdeGrense"
             var lineFeature2 = NgisFeatureHelper.CreateFeature(linestring2, id2, Operation.Create);
-            
+
 
             Point? centroid = null;
             if (insideCheck)
@@ -192,7 +195,7 @@ namespace DeltGeometriFelleskomponent.Tests
             }
             // Centroid = centroid
             //Type = "Kaiområde"
-            var feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>(){id, id2}, new List<IEnumerable<string>>());
+            var feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, new List<IEnumerable<string>>());
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
                 Feature = feature,
@@ -280,7 +283,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
             //Type = "KaiområdeGrense"
             var lineFeature = NgisFeatureHelper.CreateFeature(linestring, id, Operation.Create);
-            
+
 
             var id2 = Guid.NewGuid().ToString();
 
@@ -320,7 +323,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
             //Type = "KaiområdeGrense"
             var lineFeature2 = NgisFeatureHelper.CreateFeature(linestring2, id2, Operation.Create);
-            
+
 
             Point? centroid = null;
 
@@ -328,7 +331,7 @@ namespace DeltGeometriFelleskomponent.Tests
             {
                 //Type = "Kaiområde",
                 //Centroid = centroid
-                Feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>(){id, id2}, new List<IEnumerable<string>>()),
+                Feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, new List<IEnumerable<string>>()),
                 AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2 }
             });
 
@@ -346,13 +349,17 @@ namespace DeltGeometriFelleskomponent.Tests
         }
 
         [Fact]
-        public void ReturnsLinesAndPolygonWhenCreatingPolygonFrom2LinesAndHole()
+        public void ReturnsLinesAndPolygonWhenCreatingPolygonFrom2LinesAndHoles()
         {
-            output.WriteLine("GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHole with multiple ordered linestrings");
-            GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHole(ordered: true, insideCheck: false);
+            output.WriteLine("GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHoles with multiple ordered linestrings and input exteriors and interiors");
+            GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHoles(ordered: true, insideCheck: false, specifyInteriors: true);
+
+            output.WriteLine("GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHoles with multiple ordered linestrings and input linestrings only");
+            GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHoles(ordered: true, insideCheck: false, specifyInteriors: false);
+
         }
 
-        private void GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHole(bool ordered = true, bool insideCheck = false )
+        private void GetLinesAndPolygonWhenCreatingPolygonFrom2LinesWithHoles(bool ordered = true, bool insideCheck = false, bool specifyInteriors = true)
         {
             var id = Guid.NewGuid().ToString();
             var linestring = new LineString(new[]
@@ -385,7 +392,7 @@ namespace DeltGeometriFelleskomponent.Tests
                 });
             }
             var lineFeature2 = NgisFeatureHelper.CreateFeature(linestring2, id2, Operation.Create);
-            
+
             Point? centroid = null;
             if (insideCheck)
             {
@@ -393,39 +400,69 @@ namespace DeltGeometriFelleskomponent.Tests
                 centroid = new Point(new Coordinate(50, 50));
             }
 
-            // Add lines that forms a hole
-            var id3 = Guid.NewGuid().ToString();
-            var linestringHole1 = new LineString(new[]
+            // Add lines that forms a hole - HOLE 1
+            var id3Hole1 = Guid.NewGuid().ToString();
+            var linestring1Hole1 = new LineString(new[]
             {
                 new Coordinate(25, 25),
                 new Coordinate(50, 25),
                 new Coordinate(50, 50)
             });
-            var lineFeatureHole1 = NgisFeatureHelper.CreateFeature(linestringHole1, id3, Operation.Create);
+            var lineFeature1Hole1 = NgisFeatureHelper.CreateFeature(linestring1Hole1, id3Hole1, Operation.Create);
             // Line 2 to close the hole
-            var id4 = Guid.NewGuid().ToString();
-            var linestringHole2 = new LineString(new[]
+            var id4Hole1 = Guid.NewGuid().ToString();
+            var linestring2Hole1 = new LineString(new[]
             {
                 new Coordinate(50, 50),
                 new Coordinate(25, 50),
                 new Coordinate(25, 25)
             });
-            var lineFeatureHole2 = NgisFeatureHelper.CreateFeature(linestringHole2, id4, Operation.Create);
-            
+            var lineFeature2Hole1 = NgisFeatureHelper.CreateFeature(linestring2Hole1, id4Hole1, Operation.Create);
 
-            var interiors = new List<List<string>>();
-            interiors.Add(new List<string>() { id3, id4 });
+            // Add lines that forms a hole - HOLE 2
+            var id3Hole2 = Guid.NewGuid().ToString();
+            var linestring1Hole2 = new LineString(new[]
+            {
+                    new Coordinate(55, 55),
+                    new Coordinate(60, 55),
+                    new Coordinate(60, 60)
+                });
+            var lineFeature1Hole2 = NgisFeatureHelper.CreateFeature(linestring1Hole2, id3Hole2, Operation.Create);
+            // Line 2 to close the hole
+            var id4Hole2 = Guid.NewGuid().ToString();
+            var linestring2Hole2 = new LineString(new[]
+            {
+                    new Coordinate(60, 60),
+                    new Coordinate(55, 60),
+                    new Coordinate(55, 55)
+                });
+            var lineFeature2Hole2 = NgisFeatureHelper.CreateFeature(linestring2Hole2, id4Hole2, Operation.Create);
 
-            var feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, interiors);
-            //var feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, new List<List<string>>() { new List<string> { id3,id4} });
+
+
+            NgisFeature feature;
+            if (specifyInteriors)
+            {
+                var interiors = new List<List<string>>();
+                interiors.Add(new List<string>() { id3Hole1, id4Hole1 });
+                interiors.Add(new List<string>() { id3Hole2, id4Hole2 });
+                // specify bpthh exterior and interior
+                feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, interiors);
+            }
+            else
+            {
+                // specify only exterior as linestrings, and let the topologyImplementation (NTS) fix the holes
+                feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2, id3Hole1, id4Hole1, id3Hole2, id4Hole2 }, null);
+            }
+
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
                 Feature = feature,
-                AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2, lineFeatureHole1, lineFeatureHole2 }
+                AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2, lineFeature1Hole1, lineFeature2Hole1, lineFeature1Hole2, lineFeature2Hole2 }
             });
 
 
-            Assert.Equal(5, res.AffectedFeatures.Count());
+            Assert.Equal(7, res.AffectedFeatures.Count());
             var feature1 = res.AffectedFeatures.First();
 
             Assert.Equal("LineString", feature1.Geometry!.GeometryType);
@@ -436,8 +473,8 @@ namespace DeltGeometriFelleskomponent.Tests
 
             Assert.Equal("LineString", feature2.Geometry!.GeometryType);
             Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature2));
-            
-            var featurePolygon = res.AffectedFeatures.ElementAt(4); // polygon
+
+            var featurePolygon = res.AffectedFeatures.ElementAt(6); // polygon
             Assert.Equal("Polygon", featurePolygon.Geometry!.GeometryType);
             Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(featurePolygon));
 
@@ -450,9 +487,9 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal(feature2References.First(), NgisFeatureHelper.GetLokalId(featurePolygon));
 
             var feature3References = NgisFeatureHelper.GetExteriors(featurePolygon);
-            Assert.Equal(4, feature3References.Count);
+            Assert.Equal(2, feature3References.Count);
             Assert.Equal(feature3References.First(), NgisFeatureHelper.GetLokalId(feature1));
-            Assert.Equal(feature3References.Last(), NgisFeatureHelper.GetLokalId(lineFeatureHole2));
+            Assert.Equal(feature3References.Last(), NgisFeatureHelper.GetLokalId(feature2));
 
             if (insideCheck)
             {
@@ -464,15 +501,22 @@ namespace DeltGeometriFelleskomponent.Tests
             var featureHolesReferences = NgisFeatureHelper.GetInteriors(featurePolygon);
             foreach (var hole in featureHolesReferences)
             {
-                Assert.Equal(feature3References.Last(), NgisFeatureHelper.GetLokalId(lineFeatureHole2));
+                Assert.Equal(featureHolesReferences.First().First(), NgisFeatureHelper.GetLokalId(lineFeature1Hole1));
+                Assert.Equal(featureHolesReferences.First().Last(), NgisFeatureHelper.GetLokalId(lineFeature2Hole1));
+
+                Assert.Equal(featureHolesReferences.Last().First(), NgisFeatureHelper.GetLokalId(lineFeature1Hole2));
+                Assert.Equal(featureHolesReferences.Last().Last(), NgisFeatureHelper.GetLokalId(lineFeature2Hole2));
+
             }
 
-            // Assert.Equal(featurePolygon.References!.Last(), lineFeatureHole2.LocalId);
-            
             var poly = featurePolygon.Geometry;
             output.WriteLine(poly.ToString());
 
 
         }
+
+
+
+
     }
 }
