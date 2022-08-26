@@ -497,7 +497,6 @@ namespace DeltGeometriFelleskomponent.Tests
                 // Assert.True(res.IsValid);
             }
 
-            // TODO: Fix for For å håndtere hull.
             var featureHolesReferences = NgisFeatureHelper.GetInteriors(featurePolygon);
             foreach (var hole in featureHolesReferences)
             {
