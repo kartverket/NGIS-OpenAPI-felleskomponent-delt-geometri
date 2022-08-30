@@ -20,40 +20,35 @@ public class PolygonCreator
 
     public TopologyResponse CreatePolygonFromLines(List<NgisFeature> lineFeatures, Point? centroid)
     {
-        // use  Polygonizer polygonizer for all operations
-        var isValid = true;
-        Polygon? polygon = null;
         // Now supports  multiple linestrings and order
-        Polygonizer polygonizer = new Polygonizer(extractOnlyPolygonal: true);
+        var polygonizer = new Polygonizer(extractOnlyPolygonal: true);
+        polygonizer.Add(lineFeatures.Select(lf => lf.Geometry).ToList());
 
-        foreach (var lineFeature in lineFeatures)
+        if (polygonizer.GetPolygons().Count == 0)
         {
-            polygonizer.Add(lineFeature.Geometry);
-        }
-
-        if (polygonizer.GetPolygons().Count > 0)
-        {
-            polygon = (Polygon)polygonizer.GetPolygons().First();
-            isValid = polygon.IsValid;
-
-            if (!polygon.Shell.IsCCW)
+            return new TopologyResponse()
             {
-                // TODO: Check if polygon.Reverse is enough
-                Console.WriteLine("Polygon is not CCW");
-                polygon = (Polygon)polygon.Reverse(); // reverse polygon
-            }
+                IsValid = false
+            };
+        }
+   
+        var polygon = (Polygon)polygonizer.GetPolygons().First();
+        var isValid = polygon.IsValid;
 
-            if (centroid != null)
-            {
-                var inside = polygon.Contains(centroid);
-                Console.WriteLine("Point is inside polygon:{0}", inside);
-                isValid = inside;
-            }
-        }
-        else
+        if (!polygon.Shell.IsCCW)
         {
-            isValid = false;
+            // TODO: Check if polygon.Reverse is enough
+            Console.WriteLine("Polygon is not CCW");
+            polygon = (Polygon)polygon.Reverse(); // reverse polygon
         }
+
+        if (centroid != null)
+        {
+            var inside = polygon.Contains(centroid);
+            Console.WriteLine("Point is inside polygon:{0}", inside);
+            isValid = inside;
+        }
+        
 
         var cutEdges = polygonizer.GetCutEdges();
         var dangels = polygonizer.GetDangles();
@@ -69,51 +64,12 @@ public class PolygonCreator
 
         if (polygon != null)
         {
-
-
             var exterior = polygon.ExteriorRing;
             var interiors = polygon.InteriorRings;
-            var referencesExterior = new List<NgisFeature>();
-            List<List<NgisFeature>>? referencesInteriors = null;
-
-            foreach (var feature in lineFeatures)
-            {
-                if (feature.Geometry.CoveredBy(exterior))
-                {
-                    referencesExterior.Add(feature);
-                }
-            }
-
-            if (interiors != null && interiors.Length > 0)
-            {
-                foreach (var hole in interiors)
-                {
-                    List<NgisFeature>? referencesOnehole = null;
-                    foreach (var feature in lineFeatures)
-                    {
-                        if (feature.Geometry.CoveredBy(hole))
-                        {
-                            //referencesInteriors ??= new List<List<NgisFeature>>();
-                            if (referencesInteriors == null)
-                            {
-                                referencesInteriors = new List<List<NgisFeature>>();
-                            }
-
-                            referencesOnehole ??= new List<NgisFeature>();
-                            //if (referencesOnehole == null)
-                            //{
-                            //    referencesOnehole = new List<NgisFeature>();
-                            //}
-
-
-                            referencesOnehole.Add(feature);
-                        }
-                    }
-
-                    if (referencesOnehole != null) referencesInteriors?.Add(referencesOnehole);
-                }
-            }
-
+            var referencesExterior = lineFeatures.Where(feature => feature.Geometry.CoveredBy(exterior));
+            var referencesInteriors = interiors.Select(hole =>
+                lineFeatures.Where(feature => feature.Geometry.CoveredBy(hole)).ToList()).Where(hole => hole.Count >0);
+            
             NgisFeatureHelper.SetReferences(polygonFeature, referencesExterior, referencesInteriors);
         }
 
