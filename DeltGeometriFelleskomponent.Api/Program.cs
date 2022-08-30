@@ -16,6 +16,7 @@ builder.Services.AddTransient<ITopologyImplementation, TopologyImplementation>()
 
 builder.Services.Configure<JsonOptions>(options =>
 {
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     options.JsonSerializerOptions.Converters.Add(new NetTopologySuite.IO.Converters.GeoJsonConverterFactory());
 });

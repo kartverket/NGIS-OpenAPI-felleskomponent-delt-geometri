@@ -6,19 +6,16 @@ namespace DeltGeometriFelleskomponent.Tests;
 
 public abstract class TestBase
 {
-    protected NgisFeature ReadFeature(string path)
+    protected static NgisFeature ReadFeature(string path)
     {
-        var text = System.IO.File.ReadAllText(@"Examples\polygon_replace.geojson");
-        var feature = JsonSerializer.Deserialize<NgisFeature>(text, new JsonSerializerOptions() {
+        var text = System.IO.File.ReadAllText(path);
+        return JsonSerializer.Deserialize<NgisFeature>(text, new JsonSerializerOptions() {
             PropertyNameCaseInsensitive = true,
             Converters = { 
                 new JsonStringEnumConverter(),
                 new NetTopologySuite.IO.Converters.GeoJsonConverterFactory()
             }
-        });
-
-        return feature;
-
+        })!;
     }
 
 }
