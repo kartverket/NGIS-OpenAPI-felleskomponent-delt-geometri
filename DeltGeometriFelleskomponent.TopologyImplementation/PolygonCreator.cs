@@ -42,5 +42,4 @@ public class PolygonCreator
         NgisFeatureHelper.SetOperation(interiorFeature, Operation.Create);
         return interiorFeature;
     }
-
 }
