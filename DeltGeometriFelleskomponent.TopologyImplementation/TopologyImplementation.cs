@@ -214,44 +214,4 @@ public class TopologyImplementation : ITopologyImplementation
         //set type to type
         return polygonFeature;
     }
-
-    // TODO: Alternativ for å håndtere hull ?
-    //public TopologyResponse CreatePolygonFromLines(List<NgisFeature> lineFeatures, Point? centroid)
-    //{
-    //    //if (a.Any((geom, id) => geom.))
-
-    //    //1. hent ut geometrier
-    //    //2. legg id på geometri (userData)
-    //    //3. lag polygon
-
-    //    var featureReferences = lineFeatures.Select(f => (f.Geometry, NgisFeatureHelper.GetLokalId(f)));
-
-    //    foreach (var feat in lineFeatures)
-    //    {
-    //        //feat.Geometry
-    //    }
-
-    //    foreach (var feature in featureReferences)
-    //    {
-    //        //feature.Geometry.UserData = new 
-    //    }
-
-    //    //lage feature med polygonGEometry og exterior og interiors
-
-    //    return null;
-    //}
-
-
-
-
-    //private IList<IPoint> Contains(IGeometry geom, IEnumerable<IPoint> points)
-    //{
-    //    var prepGeom = new NetTopologySuite.Geometries.Prepared.PreparedGeometryFactory().Prepare(geom);
-    //    var res = new List<IPoint>();
-    //    foreach (var point in points)
-    //    {
-    //        if (prepGeom.Contains(point)) res.Add(point);
-    //    }
-    //    return res;
-    //}
 }
