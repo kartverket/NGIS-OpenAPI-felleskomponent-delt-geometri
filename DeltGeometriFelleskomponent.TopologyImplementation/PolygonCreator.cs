@@ -18,7 +18,7 @@ public class PolygonCreator
         };
     }
 
-    public TopologyResponse CreatePolygonFromLines(string type, List<NgisFeature> lineFeatures, Point? centroid)
+    public TopologyResponse CreatePolygonFromLines(List<NgisFeature> lineFeatures, Point? centroid)
     {
         // use  Polygonizer polygonizer for all operations
         var isValid = true;

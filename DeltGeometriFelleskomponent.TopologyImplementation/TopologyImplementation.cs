@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using DeltGeometriFelleskomponent.Models;
+﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
-using NetTopologySuite.Operation.Polygonize;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
@@ -17,6 +15,9 @@ public class TopologyImplementation : ITopologyImplementation
             Operation.Replace => HandleUpdate(request),
             null => throw new ArgumentException("")
         };
+
+    public TopologyResponse CreatePolygonFromLines(CreatePolygonFromLinesRequest request)
+        => _polygonCreator.CreatePolygonFromLines(request.Features, request.Centroid);
 
     private TopologyResponse HandleCreate(ToplogyRequest request)
         => request.Feature.Geometry switch
@@ -43,7 +44,7 @@ public class TopologyImplementation : ITopologyImplementation
             // Polygonet er tomt, altså ønsker brukeren å lage et nytt polygon basert på grenselinjer
             if (request.Feature.Geometry_Properties?.Exterior == null) return new TopologyResponse();
             var referredFeatures = GetReferredFeatures(request.Feature, result.AffectedFeatures);
-            return _polygonCreator.CreatePolygonFromLines(request.Feature.Type, referredFeatures, null);
+            return _polygonCreator.CreatePolygonFromLines(referredFeatures, null);
         }
         return _polygonCreator.CreatePolygonFromGeometry(request);
     }
