@@ -60,7 +60,8 @@ public class TopologyImplementation : ITopologyImplementation
                     throw new Exception("Referred feature not present in AffectedFeatures");
                 }
             }
-            // Her er feilen med hull, mangler interiors
+
+            // If interiors as input. Note that if interiors is not specified, we'll find the holes either way
             if (request.Feature.Geometry_Properties.Interiors != null && request.Feature.Geometry_Properties.Interiors.Count > 0)
             {
                 foreach (var hole in request.Feature.Geometry_Properties.Interiors)
@@ -110,6 +111,7 @@ public class TopologyImplementation : ITopologyImplementation
         Polygon? polygon = null;
         // Now supports  multiple linestrings and order
         Polygonizer polygonizer = new Polygonizer(extractOnlyPolygonal: true);
+        
         foreach (var lineFeature in lineFeatures)
         {
             polygonizer.Add(lineFeature.Geometry);
@@ -149,34 +151,98 @@ public class TopologyImplementation : ITopologyImplementation
         var lokalId = Guid.NewGuid().ToString();
 
 
-        // Her er feil 2 med hull, mangler interiors, må bruke denne ?:
-        // public static NgisFeature CreateFeature(Geometry geometry, string lokalId, Operation operation, IEnumerable<string> exterior, IEnumerable<IEnumerable<string>>? interiors)
         var polygonFeature = NgisFeatureHelper.CreateFeature(polygon, lokalId);
-        NgisFeatureHelper.SetReferences(polygonFeature,lineFeatures, null);
+
+        if (polygon != null)
+        {
+
+
+            var exterior = polygon.ExteriorRing;
+            var interiors = polygon.InteriorRings;
+            var referencesExterior = new List<NgisFeature>();
+            List<List<NgisFeature>>? referencesInteriors = null;
+
+            foreach (var feature in lineFeatures)
+            {
+                if (feature.Geometry.CoveredBy(exterior))
+                {
+                    referencesExterior.Add(feature);
+                }
+            }
+
+            if (interiors != null && interiors.Length > 0)
+            {
+                foreach (var hole in interiors)
+                {
+                    List<NgisFeature>? referencesOnehole = null;
+                    foreach (var feature in lineFeatures)
+                    {
+                        if (feature.Geometry.CoveredBy(hole))
+                        {
+                            //referencesInteriors ??= new List<List<NgisFeature>>();
+                            if (referencesInteriors == null)
+                            {
+                                referencesInteriors = new List<List<NgisFeature>>();
+                            }
+
+                            referencesOnehole ??= new List<NgisFeature>();
+                            //if (referencesOnehole == null)
+                            //{
+                            //    referencesOnehole = new List<NgisFeature>();
+                            //}
+
+
+                            referencesOnehole.Add( feature);
+                        }
+                    }
+
+                    if (referencesOnehole != null) referencesInteriors?.Add(referencesOnehole);
+                }
+            }
+
+            NgisFeatureHelper.SetReferences(polygonFeature, referencesExterior, referencesInteriors);
+        }
+
+        else
+        {
+            NgisFeatureHelper.SetReferences(polygonFeature, lineFeatures, null);
+        }
         NgisFeatureHelper.SetOperation(polygonFeature, Operation.Create);
 
-        lineFeatures.ForEach(a => NgisFeatureHelper.SetReferences(a, new List<string>(){lokalId}, null));
+        lineFeatures.ForEach(a => NgisFeatureHelper.SetReferences(a, new List<string>() { lokalId }, null));
 
         //set type to type
         return polygonFeature;
     }
 
-    // TODO: For å håndtere hull
+    // TODO: Alternativ for å håndtere hull ?
     //public TopologyResponse CreatePolygonFromLines(List<NgisFeature> lineFeatures, Point? centroid)
     //{
-    //    var a = lineFeatures.Select(f => (f.Geometry, NgisFeatureHelper.GetLokalId(f)));
     //    //if (a.Any((geom, id) => geom.))
-    
+
     //    //1. hent ut geometrier
-    //    //2. legg id på geometri
+    //    //2. legg id på geometri (userData)
     //    //3. lag polygon
 
+    //    var featureReferences = lineFeatures.Select(f => (f.Geometry, NgisFeatureHelper.GetLokalId(f)));
 
+    //    foreach (var feat in lineFeatures)
+    //    {
+    //        //feat.Geometry
+    //    }
+
+    //    foreach (var feature in featureReferences)
+    //    {
+    //        //feature.Geometry.UserData = new 
+    //    }
 
     //    //lage feature med polygonGEometry og exterior og interiors
+
+    //    return null;
     //}
 
-    
+
+
 
     //private IList<IPoint> Contains(IGeometry geom, IEnumerable<IPoint> points)
     //{
