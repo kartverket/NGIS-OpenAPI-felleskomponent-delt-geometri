@@ -1,25 +1,46 @@
 using DeltGeometriFelleskomponent.TopologyImplementation;
-using System.Text.Json.Serialization;
 using DeltGeometriFelleskomponent.Api;
-using Microsoft.AspNetCore.Mvc;
+using DeltGeometriFelleskomponent.Api.Util;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson(jsonOptions =>
+{
+    jsonOptions.SerializerSettings.Converters.Add(new GeoJsonConverter());
+    jsonOptions.SerializerSettings.Converters.Add(new StringEnumConverter());
+    jsonOptions.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+    jsonOptions.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<ITopologyImplementation, TopologyImplementation>();
 
+
+/*
 builder.Services.Configure<JsonOptions>(options =>
 {
     options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    options.JsonSerializerOptions.Converters.Add(new NetTopologySuite.IO.Converters.GeoJsonConverterFactory());
+    //options.JsonSerializerOptions.Converters.Add(new NetTopologySuite.IO.Converters.GeoJsonConverterFactory());
+
+    var geometryFactoryEx = new GeometryFactoryEx(new PrecisionModel(), 4326)
+    {
+        OrientationOfExteriorRing = LinearRingOrientation.CounterClockwise,
+        
+
+    };
+
+    options.JsonSerializerOptions.Converters.Add(new GeoJsonConverterFactory(geometryFactoryEx));
+
 });
+*/
 
 builder.Services.AddOpenApiDocument(config =>
 {

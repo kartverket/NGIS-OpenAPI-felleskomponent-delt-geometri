@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DeltGeometriFelleskomponent.Api\DeltGeometriFelleskomponent.Api.csproj" />
     <ProjectReference Include="..\DeltGeometriFelleskomponent.TopologyImplementation\DeltGeometriFelleskomponent.TopologyImplementation.csproj" />
   </ItemGroup>
 

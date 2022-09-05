@@ -8,6 +8,7 @@ public class PolygonCreator
 {
     public TopologyResponse CreatePolygonFromGeometry(ToplogyRequest request)
     {
+        request.Feature.Geometry = EnsureOrdering((Polygon)request.Feature.Geometry);
         NgisFeatureHelper.EnsureLocalId(request.Feature);
         var exteriorLine = CreateExteriorLineForPolyon( request.Feature);
         var interiorLines = CreateInteriorLinesForPolyon(request.Feature);
@@ -35,12 +36,7 @@ public class PolygonCreator
         var polygon = (Polygon)polygonizer.GetPolygons().First();
         var isValid = polygon.IsValid;
 
-        if (!polygon.Shell.IsCCW)
-        {
-            // TODO: Check if polygon.Reverse is enough
-            Console.WriteLine("Polygon is not CCW");
-            polygon = (Polygon)polygon.Reverse(); // reverse polygon
-        }
+        polygon = EnsureOrdering(polygon);
 
         if (centroid != null)
         {
@@ -113,5 +109,12 @@ public class PolygonCreator
         var interiorFeature = NgisFeatureHelper.CreateFeature(ring);
         NgisFeatureHelper.SetOperation(interiorFeature, Operation.Create);
         return interiorFeature;
+    }
+
+    private static Polygon EnsureOrdering(Polygon polygon)
+    {
+        var ring = polygon.Shell.IsCCW ? polygon.Shell : (LinearRing)polygon.Shell.Reverse();
+        var holes = polygon.Holes.Select(hole => hole.IsCCW ? (LinearRing)hole.Reverse() : hole).ToArray();
+        return new Polygon(ring, holes);
     }
 }

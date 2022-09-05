@@ -1,7 +1,10 @@
 ﻿using System.Linq;
+using System.Text.Json;
+using DeltGeometriFelleskomponent.Api.Util;
 using DeltGeometriFelleskomponent.Models;
 using DeltGeometriFelleskomponent.TopologyImplementation;
 using NetTopologySuite.Geometries;
+using NetTopologySuite.IO.Converters;
 using Xunit;
 
 namespace DeltGeometriFelleskomponent.Tests;
@@ -91,5 +94,31 @@ public class CreatePolygonTest: TestBase
         //make sure that the linestrings doesn't have any references
         Assert.Null(linestring1.Geometry_Properties);
         Assert.Null(linestring2.Geometry_Properties);
+    }
+    [Fact]
+    public void Meh()
+    {
+        var poly = new Polygon(new LinearRing(new[]
+        {
+            new Coordinate(1, 1),
+            new Coordinate(1, 2),
+            new Coordinate(2, 2),
+            new Coordinate(2, 1),
+            new Coordinate(1, 1),
+        }));
+
+        Assert.False(poly.Shell.IsCCW);
+
+        var geojson = JsonSerializer.Serialize(poly, options: new JsonSerializerOptions()
+        {
+            Converters = { new GeoJsonConverterFactory()}
+        });
+
+        Assert.Equal("{\"type\":\"Polygon\",\"coordinates\":[[[1,1],[1,2],[2,2],[2,1],[1,1]]]}", geojson);
+
+
+        var geojson2 = GeoJsonConvert.SerializeObject(poly.Reverse());
+
+        Assert.Equal("{\"type\":\"Polygon\",\"coordinates\":[[[1.0,1.0],[2.0,1.0],[2.0,2.0],[1.0,2.0],[1.0,1.0]]]}", geojson2);
     }
 }
