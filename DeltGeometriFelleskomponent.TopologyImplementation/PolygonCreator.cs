@@ -124,7 +124,7 @@ public class PolygonCreator
         return interiorFeature;
     }
 
-    private static Polygon EnsureOrdering(Polygon polygon)
+    public static Polygon EnsureOrdering(Polygon polygon)
     {
         var ring = polygon.Shell.IsCCW ? polygon.Shell : (LinearRing)polygon.Shell.Reverse();
         var holes = polygon.Holes.Select(hole => hole.IsCCW ? (LinearRing)hole.Reverse() : hole).ToArray();

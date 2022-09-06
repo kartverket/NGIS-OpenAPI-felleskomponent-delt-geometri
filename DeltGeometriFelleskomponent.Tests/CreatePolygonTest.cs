@@ -96,27 +96,20 @@ public class CreatePolygonTest: TestBase
         Assert.Null(linestring1.Geometry_Properties);
         Assert.Null(linestring2.Geometry_Properties);
     }
-    //[Fact]
-    //public void Meh()
-    //{
-    //    var poly = new Polygon(new LinearRing(new[]
-    //    {
-    //        new Coordinate(1, 1),
-    //        new Coordinate(1, 2),
-    //        new Coordinate(2, 2),
-    //        new Coordinate(2, 1),
-    //        new Coordinate(1, 1),
-    //    }));
+    [Fact]
+    public void PolygonSerializationHandlesRingWinding()
+    {
+        var poly = new Polygon(new LinearRing(new[]
+        {
+            new Coordinate(1, 1),
+            new Coordinate(1, 2),
+            new Coordinate(2, 2),
+            new Coordinate(2, 1),
+            new Coordinate(1, 1),
+        }));
+        
+        var geojson2 = GeoJsonConvert.SerializeObject(PolygonCreator.EnsureOrdering(poly));
 
-    //    Assert.False(poly.Shell.IsCCW);
-
-    //    var geojson =  JsonConvert.SerializeObject(poly, new GeoJsonConverter());
-
-    //    Assert.Equal("{\"type\":\"Polygon\",\"coordinates\":[[[1,1],[1,2],[2,2],[2,1],[1,1]]]}", geojson);
-
-
-    //    var geojson2 = GeoJsonConvert.SerializeObject(poly.Reverse());
-
-    //    Assert.Equal("{\"type\":\"Polygon\",\"coordinates\":[[[1.0,1.0],[2.0,1.0],[2.0,2.0],[1.0,2.0],[1.0,1.0]]]}", geojson2);
-    //}
+        Assert.Equal("{\"type\":\"Polygon\",\"coordinates\":[[[1.0,1.0],[2.0,1.0],[2.0,2.0],[1.0,2.0],[1.0,1.0]]]}", geojson2);
+    }
 }
