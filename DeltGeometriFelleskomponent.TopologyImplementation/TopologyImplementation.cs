@@ -44,8 +44,9 @@ public class TopologyImplementation : ITopologyImplementation
             // Polygonet er tomt, altså ønsker brukeren å lage et nytt polygon basert på grenselinjer
             if (request.Feature.Geometry_Properties?.Exterior == null) return new TopologyResponse();
             var referredFeatures = GetReferredFeatures(request.Feature, result.AffectedFeatures);
+            // CreatePolygonFromLines now return NgisFeature FeatureReferences for lines
             var res = _polygonCreator.CreatePolygonFromLines(referredFeatures, null);
-            res.AffectedFeatures = result.AffectedFeatures.Concat(res.AffectedFeatures).ToList();
+            //res.AffectedFeatures = result.AffectedFeatures.Concat(res.AffectedFeatures).ToList();
             return res;
         }
         return _polygonCreator.CreatePolygonFromGeometry(request);
