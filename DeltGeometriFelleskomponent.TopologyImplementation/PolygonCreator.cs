@@ -1,6 +1,7 @@
 ﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Operation.Polygonize;
+using System.Linq;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
@@ -10,11 +11,11 @@ public class PolygonCreator
     {
         request.Feature.Geometry = EnsureOrdering((Polygon)request.Feature.Geometry);
         NgisFeatureHelper.EnsureLocalId(request.Feature);
-        var exteriorLine = CreateExteriorLineForPolyon( request.Feature);
+        var exteriorLine = CreateExteriorLineForPolyon(request.Feature);
         var interiorLines = CreateInteriorLinesForPolyon(request.Feature);
         return new TopologyResponse()
         {
-            AffectedFeatures = request.AffectedFeatures.Concat(new List<NgisFeature>(){request.Feature, exteriorLine}).Concat(interiorLines).ToList(),
+            AffectedFeatures = request.AffectedFeatures.Concat(new List<NgisFeature>() { request.Feature, exteriorLine }).Concat(interiorLines).ToList(),
             IsValid = true
         };
     }
@@ -32,7 +33,7 @@ public class PolygonCreator
                 IsValid = false
             };
         }
-   
+
         var polygon = (Polygon)polygonizer.GetPolygons().First();
         var isValid = polygon.IsValid;
 
@@ -44,7 +45,7 @@ public class PolygonCreator
             Console.WriteLine("Point is inside polygon:{0}", inside);
             isValid = inside;
         }
-        
+
 
         var cutEdges = polygonizer.GetCutEdges();
         var dangels = polygonizer.GetDangles();
@@ -58,14 +59,19 @@ public class PolygonCreator
 
         var polygonFeature = NgisFeatureHelper.CreateFeature(polygon, lokalId);
 
+
+        IEnumerable<NgisFeature>? referencesExterior = null;
+        IEnumerable<List<NgisFeature>>? referencesInteriors = null;
+
+
         if (polygon != null)
         {
             var exterior = polygon.ExteriorRing;
             var interiors = polygon.InteriorRings;
-            var referencesExterior = lineFeatures.Where(feature => feature.Geometry.CoveredBy(exterior));
-            var referencesInteriors = interiors.Select(hole =>
-                lineFeatures.Where(feature => feature.Geometry.CoveredBy(hole)).ToList()).Where(hole => hole.Count >0);
-            
+            referencesExterior = lineFeatures.Where(feature => feature.Geometry.CoveredBy(exterior));
+            referencesInteriors = interiors.Select(hole =>
+                lineFeatures.Where(feature => feature.Geometry.CoveredBy(hole)).ToList()).Where(hole => hole.Count > 0);
+
             NgisFeatureHelper.SetReferences(polygonFeature, referencesExterior, referencesInteriors);
         }
 
@@ -77,12 +83,18 @@ public class PolygonCreator
 
         lineFeatures.ForEach(a => NgisFeatureHelper.SetReferences(a, new List<string>() { lokalId }, null));
 
-        //set type to type
+        //CreatePolygonFromLines now return NgisFeature FeatureReferences for lines in addition to the new polygon
+        var affectedExteriors = referencesExterior.ToList().ToList();
+        var affectedInteriors = referencesInteriors.SelectMany(listNgisInterior => listNgisInterior).ToList();
+        var affectedPolygon = new List<NgisFeature>() { polygonFeature };
+        var affected = affectedExteriors.Concat(affectedInteriors).Concat(affectedPolygon);
+        
         return new TopologyResponse()
         {
-            AffectedFeatures = new List<NgisFeature>(){ polygonFeature },
+            AffectedFeatures = affected.ToList(),
             IsValid = isValid
         };
+
     }
 
     private static NgisFeature CreateExteriorLineForPolyon(NgisFeature polygonFeature)
@@ -97,9 +109,10 @@ public class PolygonCreator
     private static IEnumerable<NgisFeature> CreateInteriorLinesForPolyon(NgisFeature polygonFeature)
     {
         var interiorFeatures = ((Polygon)polygonFeature.Geometry).InteriorRings.Select(CreateInteriorFeature).ToList();
-        if (interiorFeatures.Count > 0) {
+        if (interiorFeatures.Count > 0)
+        {
             //TODO: Handle winding?
-            NgisFeatureHelper.SetInterior(polygonFeature, interiorFeatures.Select(f => new List<NgisFeature>(){f}));
+            NgisFeatureHelper.SetInterior(polygonFeature, interiorFeatures.Select(f => new List<NgisFeature>() { f }));
         }
         return interiorFeatures;
     }
