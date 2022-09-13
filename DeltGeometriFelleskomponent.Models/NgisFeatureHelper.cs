@@ -101,16 +101,8 @@ public static class NgisFeatureHelper
 
     public static void SetLokalId(NgisFeature feature, string lokalId)
     {
-        //This just looks plain stupid, why copy the attributes table?
-        //well, we are using NetTopologySuite.IO.GeoJSON4STJ for geojson (de)serialization, 
-        //and for some reason that implementation provides its own Attributes table: StjAttributesTable
-        //this does not support setting attributes
-        // as can be seen here: https://github.com/NetTopologySuite/NetTopologySuite.IO.GeoJSON/blob/77aa684748086d741d8a15db2b089b6b9ddf0848/src/NetTopologySuite.IO.GeoJSON4STJ/Converters/StjAttributesTable.cs#L29
-        var props = feature.Properties.GetNames().Aggregate(new AttributesTable(), (acc, key) =>
-        {
-            acc.Add(key, feature.Properties.GetOptionalValue(key));
-            return acc;
-        } );
+       
+        var props = feature.Properties;
 
         if (!props.Exists("identifikasjon"))
         {
