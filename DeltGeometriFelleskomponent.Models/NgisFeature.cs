@@ -14,7 +14,7 @@ public class NgisFeature
         set
         {
             _geometry = value;
-            if (value.GeometryType == "Polygon")
+            if (value.GeometryType == "Polygon" && !value.IsEmpty)
             {
                 Geometry_Properties ??= new GeometryProperties();
                 Geometry_Properties.Position = new List<double>() { value.Centroid.X, value.Centroid.Y };
