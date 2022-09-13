@@ -25,7 +25,7 @@ public class TopologyImplementation : ITopologyImplementation
             Polygon => HandlePolygon(request),
             Geometry => new TopologyResponse()
             {
-                AffectedFeatures = new List<NgisFeature>() { request.Feature },
+                AffectedFeatures = new List<NgisFeature>() { NgisFeatureHelper.EnsureLocalId(request.Feature) },
                 IsValid = true
             },
             null => new TopologyResponse()

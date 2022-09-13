@@ -10,7 +10,7 @@ public class PolygonCreator
     public TopologyResponse CreatePolygonFromGeometry(ToplogyRequest request)
     {
         request.Feature.Geometry = EnsureOrdering((Polygon)request.Feature.Geometry);
-        NgisFeatureHelper.EnsureLocalId(request.Feature);
+        request.Feature = NgisFeatureHelper.EnsureLocalId(request.Feature);
         var exteriorLine = CreateExteriorLineForPolyon(request.Feature);
         var interiorLines = CreateInteriorLinesForPolyon(request.Feature);
         return new TopologyResponse()

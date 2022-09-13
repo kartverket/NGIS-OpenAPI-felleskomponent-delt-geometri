@@ -91,12 +91,16 @@ public static class NgisFeatureHelper
         feature.Update.Action = operation;
     }
 
-    public static void EnsureLocalId(NgisFeature feature)
+    
+
+    public static NgisFeature EnsureLocalId(NgisFeature feature)
     {
         if (GetLokalId(feature) == null)
         {
             SetLokalId(feature, Guid.NewGuid().ToString());
         }
+
+        return feature;
     }
 
     public static void SetLokalId(NgisFeature feature, string lokalId)
