@@ -43,7 +43,7 @@ public class PolygonCreator
         {
             var inside = polygon.Contains(centroid);
             Console.WriteLine("Point is inside polygon:{0}", inside);
-            isValid = inside;
+            isValid = polygon.IsValid && inside;
         }
 
 
@@ -60,19 +60,19 @@ public class PolygonCreator
         var polygonFeature = NgisFeatureHelper.CreateFeature(polygon, lokalId);
 
 
-        IEnumerable<NgisFeature>? referencesExterior = null;
-        IEnumerable<List<NgisFeature>>? referencesInteriors = null;
+        var referencesExterior = new List<NgisFeature>();
+        var referencesInteriors = new List<List<NgisFeature>>();
 
 
         if (polygon != null)
         {
-            var exterior = polygon.ExteriorRing;
-            var interiors = polygon.InteriorRings;
-            referencesExterior = lineFeatures.Where(feature => feature.Geometry.CoveredBy(exterior));
-            referencesInteriors = interiors.Select(hole =>
-                lineFeatures.Where(feature => feature.Geometry.CoveredBy(hole)).ToList()).Where(hole => hole.Count > 0);
+            var exteriorReferences = GetOrientedFeatures(polygon.ExteriorRing, lineFeatures).ToList();
+            referencesExterior = exteriorReferences.Select(p => p.Feature).ToList();
+            
+            var interiorReferences = polygon.InteriorRings.Select(hole => GetOrientedFeatures(hole, lineFeatures).ToList()).ToList();
+            referencesInteriors = interiorReferences.Select(hole => hole.Select(f => f.Feature).ToList()).ToList();
 
-            NgisFeatureHelper.SetReferences(polygonFeature, referencesExterior, referencesInteriors);
+            NgisFeatureHelper.SetReferences(polygonFeature, exteriorReferences.Select(GetIdWithDirection), interiorReferences.Select(hole => hole.Select(GetIdWithDirection)));
         }
 
         else
@@ -129,5 +129,39 @@ public class PolygonCreator
         var ring = polygon.Shell.IsCCW ? polygon.Shell : (LinearRing)polygon.Shell.Reverse();
         var holes = polygon.Holes.Select(hole => hole.IsCCW ? (LinearRing)hole.Reverse() : hole).ToArray();
         return new Polygon(ring, holes);
+    }
+
+    private static bool IsSubList(IReadOnlyList<Coordinate> list, IReadOnlyList<Coordinate> sublist)
+    {
+        for (var i = 1; i < list.Count(); i++)
+        {
+            var a = list[i - 1];
+            var b = list[i];
+            if (a.Equals(sublist[0]) && b.Equals(sublist[1]))
+            {
+                return true;
+            }
+
+        }
+
+        return false;
+    }
+
+    private static string GetIdWithDirection(FeatureWithDirection f) =>
+        $"{(f.IsReversed ? "-" : "")}{NgisFeatureHelper.GetLokalId(f.Feature)}";
+
+
+    private static IEnumerable<FeatureWithDirection> GetOrientedFeatures(Geometry ring, IEnumerable<NgisFeature> candidates)
+        => candidates.Where(candidate => candidate.Geometry.CoveredBy(ring)).Select(candidate =>
+        {
+            var reversed = !IsSubList(ring.Coordinates, candidate.Geometry.Coordinates.Take(2).ToList());
+            return new FeatureWithDirection(){Feature = candidate, IsReversed = reversed};
+        });
+    
+
+    private class FeatureWithDirection 
+    {
+        public NgisFeature Feature { get; set; }
+        public bool IsReversed { get; set; }
     }
 }
