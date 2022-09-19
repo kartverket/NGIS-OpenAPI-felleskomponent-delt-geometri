@@ -591,17 +591,29 @@ namespace DeltGeometriFelleskomponent.Tests
         [Fact]
         public void MovePointOnReferencedLine()
         {
-            // 1. Create polygons with referenced lines
-            // 2. Move a point on the referenced line
-            // 3. Return updated polygon.
+            var affectedFeatures = GetLinesAndPolygonWhenCreatingPolygonFrom2Lines();
 
-            //// 1. Create polygons with referenced lines
-            //var affectedFeatures = GetLinesAndPolygonWhenCreatingPolygonFrom2Lines();
-            //var lineFeature1 = affectedFeatures.First();
-            //var lineFeature2 = affectedFeatures[1];
-            //var polygonFeature = affectedFeatures.Last();
-        }
+            var lineFeature1 = affectedFeatures!.First();
 
+            var lineFeature2 = affectedFeatures![1];
+            
+            var point1 = lineFeature1.Geometry.Boundary.Coordinates[1];
 
+            point1.X += .001;
+            point1.Y += .001;
+
+            var point2 = lineFeature2.Geometry.Boundary.Coordinates[0];
+
+            point2.X += .001;
+            point2.Y += .001;
+
+            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
+            {
+                Features = new List<NgisFeature>() { lineFeature1, lineFeature2 },
+                Centroid = null
+            });
+
+            Assert.True(res.IsValid, "Unable to move point on polygon");
+       }
     }
 }
