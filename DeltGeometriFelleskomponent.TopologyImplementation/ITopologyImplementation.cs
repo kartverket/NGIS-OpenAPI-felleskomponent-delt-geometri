@@ -6,7 +6,7 @@ public interface ITopologyImplementation
 {
     TopologyResponse ResolveReferences(ToplogyRequest request);
 
-    TopologyResponse CreatePolygonFromLines(CreatePolygonFromLinesRequest request);
+    IEnumerable<TopologyResponse> CreatePolygonsFromLines(CreatePolygonFromLinesRequest request);
 
     //TopologyResponse CreatePolygonFromGeometry(ToplogyRequest request);
 }

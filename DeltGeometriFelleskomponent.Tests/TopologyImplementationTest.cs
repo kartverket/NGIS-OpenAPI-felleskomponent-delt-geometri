@@ -107,11 +107,11 @@ namespace DeltGeometriFelleskomponent.Tests
             //Type = "Kaiområde",
 
             // _topologyImplementation.CreatePolygonFromLines replaces _topologyImplementation.ResolveReferences
-            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = new List<NgisFeature>() { lineFeature },
                 Centroid = null
-            });
+            }).First();
 
             //var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             //{
@@ -229,11 +229,11 @@ namespace DeltGeometriFelleskomponent.Tests
             //Type = "Kaiområde"
 
             // _topologyImplementation.CreatePolygonFromLines replaces _topologyImplementation.ResolveReferences
-            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
                 Centroid = centroid
-            });
+            }).First();
 
             //var feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, new List<IEnumerable<string>>());
             //var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
@@ -374,11 +374,11 @@ namespace DeltGeometriFelleskomponent.Tests
             Point? centroid = null;
 
             // _topologyImplementation.CreatePolygonFromLines replaces _topologyImplementation.ResolveReferences
-            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = new List<NgisFeature>() { lineFeature, lineFeature2 },
                 Centroid = centroid
-            });
+            }).First();
 
             //var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             //{
@@ -515,12 +515,12 @@ namespace DeltGeometriFelleskomponent.Tests
                 // specify only exterior as linestrings, and let the topologyImplementation (NTS) fix the holes
                 // _topologyImplementation.CreatePolygonFromLines replaces _topologyImplementation.ResolveReferences
                 feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2, id3Hole1, id4Hole1, id3Hole2, id4Hole2 }, null);
-                res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
+                res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
                 {
                     // Features = new List<NgisFeature>() { lineFeature, lineFeature2 },
                     Features = new List<NgisFeature>() { lineFeature, lineFeature2, lineFeature1Hole1, lineFeature2Hole1, lineFeature1Hole2, lineFeature2Hole2 },
                     Centroid = centroid
-                });
+                }).First();
 
             }
 
@@ -607,11 +607,11 @@ namespace DeltGeometriFelleskomponent.Tests
             point2.X += .001;
             point2.Y += .001;
 
-            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = new List<NgisFeature>() { lineFeature1, lineFeature2 },
                 Centroid = null
-            });
+            }).First();
 
             Assert.True(res.IsValid, "Unable to move point on polygon");
        }

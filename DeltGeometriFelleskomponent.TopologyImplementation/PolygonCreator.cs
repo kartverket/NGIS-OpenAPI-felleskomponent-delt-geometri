@@ -1,6 +1,7 @@
 ﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Operation.Polygonize;
+using NetTopologySuite.Operation.Valid;
 using System.Linq;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
@@ -20,80 +21,87 @@ public class PolygonCreator
         };
     }
 
-    public TopologyResponse CreatePolygonFromLines(List<NgisFeature> lineFeatures, Point? centroid)
+    public IEnumerable<TopologyResponse> CreatePolygonFromLines(List<NgisFeature> lineFeatures, Point? centroid)
     {
         // Now supports  multiple linestrings and order
-        var polygonizer = new Polygonizer(extractOnlyPolygonal: true);
+        var polygonizer = new Polygonizer();
+
         polygonizer.Add(lineFeatures.Select(lf => lf.Geometry).ToList());
 
         if (polygonizer.GetPolygons().Count == 0)
         {
-            return new TopologyResponse()
+            yield return new TopologyResponse()
             {
                 IsValid = false
             };
         }
 
-        var polygon = (Polygon)polygonizer.GetPolygons().First();
-        var isValid = polygon.IsValid;
+        var polygons = polygonizer.GetPolygons().ToList();
 
-        polygon = EnsureOrdering(polygon);
+        var invalidRingLines = polygonizer.GetInvalidRingLines().ToList();
 
-        if (centroid != null)
+        foreach (Polygon polygon in polygons)
         {
-            var inside = polygon.Contains(centroid);
-            Console.WriteLine("Point is inside polygon:{0}", inside);
-            isValid = polygon.IsValid && inside;
+            var isValid = polygon.IsValid;
+
+            var orderedPolygon = EnsureOrdering(polygon);
+
+            if (centroid != null)
+            {
+                var inside = orderedPolygon.Contains(centroid);
+                Console.WriteLine("Point is inside polygon:{0}", inside);
+                isValid = orderedPolygon.IsValid && inside;
+            }
+
+
+            var cutEdges = polygonizer.GetCutEdges();
+            var dangels = polygonizer.GetDangles();
+
+            if (cutEdges.Count > 0) Console.WriteLine("cutEdges.Count:{0}", cutEdges.Count);
+            if (dangels.Count > 0) Console.WriteLine("dangels.Count:{0}", dangels.Count);
+
+
+            var lokalId = Guid.NewGuid().ToString();
+
+
+            var polygonFeature = NgisFeatureHelper.CreateFeature(orderedPolygon, lokalId);
+
+
+            var referencesExterior = new List<NgisFeature>();
+            var referencesInteriors = new List<List<NgisFeature>>();
+
+
+            if (orderedPolygon != null)
+            {
+                var exteriorReferences = GetOrientedFeatures(orderedPolygon.ExteriorRing, lineFeatures).ToList();
+                referencesExterior = exteriorReferences.Select(p => p.Feature).ToList();
+
+                var interiorReferences = orderedPolygon.InteriorRings.Select(hole => GetOrientedFeatures(hole, lineFeatures).ToList()).ToList();
+                referencesInteriors = interiorReferences.Select(hole => hole.Select(f => f.Feature).ToList()).ToList();
+
+                NgisFeatureHelper.SetReferences(polygonFeature, exteriorReferences.Select(GetIdWithDirection), interiorReferences.Select(hole => hole.Select(GetIdWithDirection)));
+            }
+
+            else
+            {
+                NgisFeatureHelper.SetReferences(polygonFeature, lineFeatures, null);
+            }
+            NgisFeatureHelper.SetOperation(polygonFeature, Operation.Create);
+
+            lineFeatures.ForEach(a => NgisFeatureHelper.SetReferences(a, new List<string>() { lokalId }, null));
+
+            //CreatePolygonFromLines now return NgisFeature FeatureReferences for lines in addition to the new polygon
+            var affectedExteriors = referencesExterior.ToList().ToList();
+            var affectedInteriors = referencesInteriors.SelectMany(listNgisInterior => listNgisInterior).ToList();
+            var affectedPolygon = new List<NgisFeature>() { polygonFeature };
+            var affected = affectedExteriors.Concat(affectedInteriors).Concat(affectedPolygon);
+
+            yield return new TopologyResponse()
+            {
+                AffectedFeatures = affected.ToList(),
+                IsValid = isValid
+            };
         }
-
-
-        var cutEdges = polygonizer.GetCutEdges();
-        var dangels = polygonizer.GetDangles();
-
-        if (cutEdges.Count > 0) Console.WriteLine("cutEdges.Count:{0}", cutEdges.Count);
-        if (dangels.Count > 0) Console.WriteLine("dangels.Count:{0}", dangels.Count);
-
-
-        var lokalId = Guid.NewGuid().ToString();
-
-
-        var polygonFeature = NgisFeatureHelper.CreateFeature(polygon, lokalId);
-
-
-        var referencesExterior = new List<NgisFeature>();
-        var referencesInteriors = new List<List<NgisFeature>>();
-
-
-        if (polygon != null)
-        {
-            var exteriorReferences = GetOrientedFeatures(polygon.ExteriorRing, lineFeatures).ToList();
-            referencesExterior = exteriorReferences.Select(p => p.Feature).ToList();
-            
-            var interiorReferences = polygon.InteriorRings.Select(hole => GetOrientedFeatures(hole, lineFeatures).ToList()).ToList();
-            referencesInteriors = interiorReferences.Select(hole => hole.Select(f => f.Feature).ToList()).ToList();
-
-            NgisFeatureHelper.SetReferences(polygonFeature, exteriorReferences.Select(GetIdWithDirection), interiorReferences.Select(hole => hole.Select(GetIdWithDirection)));
-        }
-
-        else
-        {
-            NgisFeatureHelper.SetReferences(polygonFeature, lineFeatures, null);
-        }
-        NgisFeatureHelper.SetOperation(polygonFeature, Operation.Create);
-
-        lineFeatures.ForEach(a => NgisFeatureHelper.SetReferences(a, new List<string>() { lokalId }, null));
-
-        //CreatePolygonFromLines now return NgisFeature FeatureReferences for lines in addition to the new polygon
-        var affectedExteriors = referencesExterior.ToList().ToList();
-        var affectedInteriors = referencesInteriors.SelectMany(listNgisInterior => listNgisInterior).ToList();
-        var affectedPolygon = new List<NgisFeature>() { polygonFeature };
-        var affected = affectedExteriors.Concat(affectedInteriors).Concat(affectedPolygon);
-        
-        return new TopologyResponse()
-        {
-            AffectedFeatures = affected.ToList(),
-            IsValid = isValid
-        };
 
     }
 
