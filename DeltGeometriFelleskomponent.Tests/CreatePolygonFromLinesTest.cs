@@ -62,6 +62,54 @@ public class CreatePolygonFromLinesTest: TestBase
     [Fact]
     public void CreatesMultiplePolygonsWithSharedLine()
     {
+        var request = CreateTwoTrianglesWithSharedBorder();
+
+        var result = _topologyImplementation.CreatePolygonsFromLines(request);
+
+        result.ToList().ForEach(r =>
+        {
+            var polygon = r.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+
+            Assert.NotNull(polygon);
+
+            Assert.True(r.IsValid);
+
+            Assert.Equal(3, r.AffectedFeatures.Count);
+        });
+    }
+
+    [Fact]
+    public void CreatesMultiplePolygonsWithSharedLineAndHole()
+    {
+        var request = CreateTwoTrianglesWithSharedBorderAndHoleInLeftTriangle();
+
+        var result = _topologyImplementation.CreatePolygonsFromLines(request);
+
+        result.ToList().ForEach(r =>
+        {
+            Assert.True(r.IsValid);
+
+            var polygon = r.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+
+            Assert.NotNull(polygon);
+        });
+    }
+
+    private static CreatePolygonFromLinesRequest CreateTwoTrianglesWithSharedBorderAndHoleInLeftTriangle()
+    {
+        var request = CreateTwoTrianglesWithSharedBorder();
+
+        request.Features.Add(NgisFeatureHelper.CreateFeature(new LinearRing(new List<Coordinate> {
+            new Coordinate{X = -0.1, Y= .25},
+            new Coordinate{X = -0.5, Y= .5},
+            new Coordinate{X = -0.1, Y= .75},
+            new Coordinate{X = -0.1, Y= .25}
+        }.ToArray())));
+        return request;
+    }
+
+    private static CreatePolygonFromLinesRequest CreateTwoTrianglesWithSharedBorder()
+    {
         var startPoint = new Coordinate { X = 0, Y = 0 };
 
         var endPoint = new Coordinate { X = 0, Y = 1 };
@@ -90,18 +138,7 @@ public class CreatePolygonFromLinesTest: TestBase
 
         var rightLineString = NgisFeatureHelper.CreateFeature(new LineString(rightPoints));
 
-
-        var result = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
-        { Features = new List<NgisFeature>() { leftLineString, middleLineString, rightLineString } });
-
-        result.ToList().ForEach(r =>
-        {
-            Assert.True(r.IsValid);
-            Assert.Equal(3, r.AffectedFeatures.Count);
-
-            var polygon = r.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
-
-            Assert.NotNull(polygon);
-        });
+        return new CreatePolygonFromLinesRequest()
+        { Features = new List<NgisFeature>() { leftLineString, middleLineString, rightLineString } };
     }
 }
