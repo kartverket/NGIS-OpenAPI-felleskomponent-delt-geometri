@@ -110,7 +110,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = new List<NgisFeature>() { lineFeature },
-                Centroid = null
+                Centroids = null
             }).First();
 
             //var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
@@ -232,7 +232,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
-                Centroid = centroid
+                Centroids = centroid != null ? new List<Point> { centroid } : null
             }).First();
 
             //var feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, new List<IEnumerable<string>>());
@@ -377,7 +377,6 @@ namespace DeltGeometriFelleskomponent.Tests
             var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = new List<NgisFeature>() { lineFeature, lineFeature2 },
-                Centroid = centroid
             }).First();
 
             //var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
@@ -519,7 +518,6 @@ namespace DeltGeometriFelleskomponent.Tests
                 {
                     // Features = new List<NgisFeature>() { lineFeature, lineFeature2 },
                     Features = new List<NgisFeature>() { lineFeature, lineFeature2, lineFeature1Hole1, lineFeature2Hole1, lineFeature1Hole2, lineFeature2Hole2 },
-                    Centroid = centroid
                 }).First();
 
             }
@@ -610,7 +608,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
-                Centroid = null
+                Centroids = null
             }).First();
             var featurePolygon = res.AffectedFeatures.ElementAt(2); // polygon
             var poly = featurePolygon.Geometry;
@@ -646,7 +644,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
-                Centroid = null
+                Centroids = null
             }).First();
             var featurePolygon = res.AffectedFeatures.ElementAt(2); // polygon
             var poly = featurePolygon.Geometry;
@@ -682,7 +680,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
-                Centroid = null
+                Centroids = null
             }).First();
             var featurePolygon = res.AffectedFeatures.ElementAt(2); // polygon
             var poly = featurePolygon.Geometry;

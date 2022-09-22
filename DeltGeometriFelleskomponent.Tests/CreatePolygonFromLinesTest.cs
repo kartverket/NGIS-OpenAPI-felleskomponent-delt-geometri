@@ -85,6 +85,8 @@ public class CreatePolygonFromLinesTest: TestBase
 
         var result = _topologyImplementation.CreatePolygonsFromLines(request);
 
+        Assert.True(result.Count() == 2);
+
         result.ToList().ForEach(r =>
         {
             Assert.True(r.IsValid);
@@ -98,6 +100,10 @@ public class CreatePolygonFromLinesTest: TestBase
     private static CreatePolygonFromLinesRequest CreateTwoTrianglesWithSharedBorderAndHoleInLeftTriangle()
     {
         var request = CreateTwoTrianglesWithSharedBorder();
+
+        request.Centroids = new List<Point> { 
+            new Point (-.05, .5 ),
+            new Point (.25, .5 ) };
 
         request.Features.Add(NgisFeatureHelper.CreateFeature(new LinearRing(new List<Coordinate> {
             new Coordinate{X = -0.1, Y= .25},

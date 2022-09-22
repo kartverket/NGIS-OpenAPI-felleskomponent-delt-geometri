@@ -17,7 +17,7 @@ public class TopologyImplementation : ITopologyImplementation
         };
 
     public IEnumerable<TopologyResponse> CreatePolygonsFromLines(CreatePolygonFromLinesRequest request)
-        => _polygonCreator.CreatePolygonFromLines(request.Features, request.Centroid);
+        => _polygonCreator.CreatePolygonFromLines(request.Features, request.Centroids);
 
     private TopologyResponse HandleCreate(ToplogyRequest request)
         => request.Feature.Geometry switch

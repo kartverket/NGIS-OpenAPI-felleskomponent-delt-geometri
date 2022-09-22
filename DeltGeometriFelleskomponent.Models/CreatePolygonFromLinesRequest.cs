@@ -5,5 +5,5 @@ namespace DeltGeometriFelleskomponent.Models;
 public class CreatePolygonFromLinesRequest
 {
     public List<NgisFeature> Features { get; set; } = new();
-    public Point? Centroid { get; set; }
+    public List<Point>? Centroids { get; set; }
 }

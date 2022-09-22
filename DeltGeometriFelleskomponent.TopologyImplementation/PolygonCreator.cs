@@ -21,7 +21,7 @@ public class PolygonCreator
         };
     }
 
-    public IEnumerable<TopologyResponse> CreatePolygonFromLines(List<NgisFeature> lineFeatures, Point? centroid)
+    public IEnumerable<TopologyResponse> CreatePolygonFromLines(List<NgisFeature> lineFeatures, List<Point>? centroids)
     {
         // Now supports  multiple linestrings and order
         var polygonizer = new Polygonizer();
@@ -46,9 +46,12 @@ public class PolygonCreator
 
             var orderedPolygon = EnsureOrdering(polygon);
 
-            if (centroid != null)
+            if (centroids != null)
             {
-                var inside = orderedPolygon.Contains(centroid);
+                var inside = centroids.Any(centroid => orderedPolygon.Contains(centroid));
+
+                if (!inside) continue;
+
                 Console.WriteLine("Point is inside polygon:{0}", inside);
                 isValid = orderedPolygon.IsValid && inside;
             }
