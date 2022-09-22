@@ -274,7 +274,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var feature3References = NgisFeatureHelper.GetExteriors(featurePolygon);
             Assert.Equal(2, feature3References.Count);
             Assert.Equal(feature3References.First(), NgisFeatureHelper.GetLokalId(feature1));
-            
+
             //we disregard the direction of the reference here, since I cannot wrap my head around this test
             Assert.Equal(RemoveSign(feature3References.Last()), NgisFeatureHelper.GetLokalId(feature2));
 
@@ -586,13 +586,11 @@ namespace DeltGeometriFelleskomponent.Tests
 
         private static string RemoveSign(string reference)
             => reference.StartsWith("-") ? reference[1..] : reference;
-        
+
 
         [Fact]
         public void MovePointOnReferencedLine()
         {
-            var affectedFeatures = GetLinesAndPolygonWhenCreatingPolygonFrom2Lines();
-
             //// 1. Create polygons with referenced lines
             var affectedFeatures = GetLinesAndPolygonWhenCreatingPolygonFrom2Lines();
             var lineFeature1 = affectedFeatures.First();
@@ -609,14 +607,16 @@ namespace DeltGeometriFelleskomponent.Tests
 
             // 3. Return updated polygon.
             var features = new List<NgisFeature>() { editedFeature, lineFeature2 };
-            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
                 Centroid = null
-            });
+            }).First();
             var featurePolygon = res.AffectedFeatures.ElementAt(2); // polygon
             var poly = featurePolygon.Geometry;
             output.WriteLine("Modified polygon: " + poly.ToString());
+
+            Assert.True(res.IsValid, "Unable to move point on polygon");
 
         }
 
@@ -630,6 +630,8 @@ namespace DeltGeometriFelleskomponent.Tests
             var polygonFeature = affectedFeatures.Last();
 
 
+            var coordinateCount1 = lineFeature1.Geometry.Coordinates.Length;
+
             // Insert new point
             LineString lineStringModified = (LineString)lineFeature1.Geometry.Copy();
             lineStringModified[1].X += 10;
@@ -637,25 +639,25 @@ namespace DeltGeometriFelleskomponent.Tests
             var insertCoordinateCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
             var editedFeature = GeometryEdit.EditObject(affectedFeatures, EditOperation.Insert, lineFeature1, index: 1, newCoordinate: insertCoordinateCoordinate);
 
+            var coordinateCount2 = lineFeature1.Geometry.Coordinates.Length;
 
             // 3. Return updated polygon.
             var features = new List<NgisFeature>() { editedFeature, lineFeature2 };
-            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
                 Centroid = null
-            });
+            }).First();
             var featurePolygon = res.AffectedFeatures.ElementAt(2); // polygon
             var poly = featurePolygon.Geometry;
             output.WriteLine("Modified polygon: " + poly.ToString());
 
+            Assert.True(coordinateCount2 - coordinateCount1 == 1, "Unable to insert point on polygon");
+
+            Assert.True(res.IsValid, "Unable to insert point on polygon");
+
         }
 
-            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
-            {
-                Features = new List<NgisFeature>() { lineFeature1, lineFeature2 },
-                Centroid = null
-            }).First();
         [Fact]
         public void DeletePointOnReferencedLine()
         {
@@ -665,6 +667,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var lineFeature2 = affectedFeatures[1];
             var polygonFeature = affectedFeatures.Last();
 
+            var coordinateCount1 = lineFeature1.Geometry.Coordinates.Length;
 
             // delete existing point
             //LineString lineStringModified = (LineString)lineFeature1.Geometry.Copy();
@@ -673,22 +676,23 @@ namespace DeltGeometriFelleskomponent.Tests
             //var insertCoordinateCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
             var editedFeature = GeometryEdit.EditObject(affectedFeatures, EditOperation.Delete, lineFeature1, index: 1);
 
-
+            var coordinateCount2 = lineFeature1.Geometry.Coordinates.Length;
             // 3. Return updated polygon.
             var features = new List<NgisFeature>() { editedFeature, lineFeature2 };
-            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
                 Centroid = null
-            });
+            }).First();
             var featurePolygon = res.AffectedFeatures.ElementAt(2); // polygon
             var poly = featurePolygon.Geometry;
             output.WriteLine("Modified polygon: " + poly.ToString());
 
+            Assert.True(coordinateCount1 - coordinateCount2 == 1, "Unable to delete point on polygon");
+
+            Assert.True(res.IsValid, "Unable to delete point on polygon");
+
         }
-
-            Assert.True(res.IsValid, "Unable to move point on polygon");
-       }
     }
-
 }
+
