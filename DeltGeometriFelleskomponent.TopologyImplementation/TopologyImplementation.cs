@@ -16,7 +16,7 @@ public class TopologyImplementation : ITopologyImplementation
             null => throw new ArgumentException("")
         };
 
-    public TopologyResponse CreatePolygonFromLines(CreatePolygonFromLinesRequest request)
+    public IEnumerable<TopologyResponse> CreatePolygonsFromLines(CreatePolygonFromLinesRequest request)
         => _polygonCreator.CreatePolygonFromLines(request.Features, request.Centroid);
 
     private TopologyResponse HandleCreate(ToplogyRequest request)
@@ -25,7 +25,7 @@ public class TopologyImplementation : ITopologyImplementation
             Polygon => HandlePolygon(request),
             Geometry => new TopologyResponse()
             {
-                AffectedFeatures = new List<NgisFeature>() { request.Feature },
+                AffectedFeatures = new List<NgisFeature>() { NgisFeatureHelper.EnsureLocalId(request.Feature) },
                 IsValid = true
             },
             null => new TopologyResponse()
@@ -47,7 +47,7 @@ public class TopologyImplementation : ITopologyImplementation
             // CreatePolygonFromLines now return NgisFeature FeatureReferences for lines
             var res = _polygonCreator.CreatePolygonFromLines(referredFeatures, null);
             //res.AffectedFeatures = result.AffectedFeatures.Concat(res.AffectedFeatures).ToList();
-            return res;
+            return res.First();
         }
         return _polygonCreator.CreatePolygonFromGeometry(request);
     }

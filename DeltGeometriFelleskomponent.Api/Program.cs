@@ -9,6 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddCors(options =>
+    options.AddPolicy("CrossOriginPolicy", p =>
+        p.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader()));
+
 builder.Services.AddControllers().AddNewtonsoftJson(jsonOptions =>
 {
     jsonOptions.SerializerSettings.Converters.Add(new GeoJsonConverter());
@@ -49,7 +55,7 @@ builder.Services.AddOpenApiDocument(config =>
 });
 
 var app = builder.Build();
-
+app.UseCors("CrossOriginPolicy");
 // Configure the HTTP request pipeline.
 app.UseOpenApi();
 app.UseSwaggerUi3(c =>

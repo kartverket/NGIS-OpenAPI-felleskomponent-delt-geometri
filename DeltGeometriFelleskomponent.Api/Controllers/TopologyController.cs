@@ -101,7 +101,7 @@ namespace DeltGeometriFelleskomponent.Api.Controllers
         /// Create a polygon feature given a set of line features and an optional centroid
         /// </summary>
         [HttpPost(template: "polygonFromLines")]
-        public TopologyResponse CreatePolygonFromLies([FromBody] CreatePolygonFromLinesRequest request)
-            => _topologyImplementation.CreatePolygonFromLines(request);
+        public IEnumerable<TopologyResponse> CreatePolygonFromLies([FromBody] CreatePolygonFromLinesRequest request)
+            => _topologyImplementation.CreatePolygonsFromLines(request);
     }
 }
