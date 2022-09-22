@@ -600,7 +600,7 @@ namespace DeltGeometriFelleskomponent.Tests
             lineStringModified[1].Y += 20;
 
             var movedCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var editedFeature = GeometryEdit.EditObject(affectedFeatures, EditOperation.Edit, lineFeature1, index: 1, newCoordinate: movedCoordinate);
+            var editedFeature = EditObject(affectedFeatures, EditOperation.Edit, lineFeature1, index: 1, newCoordinate: movedCoordinate);
 
             // 3. Return updated polygon.
             var features = new List<NgisFeature>() { editedFeature, lineFeature2 };
@@ -630,7 +630,7 @@ namespace DeltGeometriFelleskomponent.Tests
             lineStringModified[1].X += 10;
             lineStringModified[1].Y += 20;
             var insertCoordinateCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var editedFeature = GeometryEdit.EditObject(affectedFeatures, EditOperation.Insert, lineFeature1, index: 1, newCoordinate: insertCoordinateCoordinate);
+            var editedFeature = EditObject(affectedFeatures, EditOperation.Insert, lineFeature1, index: 1, newCoordinate: insertCoordinateCoordinate);
 
 
             // 3. Return updated polygon.
@@ -661,7 +661,7 @@ namespace DeltGeometriFelleskomponent.Tests
             //lineStringModified[1].X += 10;
             //lineStringModified[1].Y += 20;
             //var insertCoordinateCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var editedFeature = GeometryEdit.EditObject(affectedFeatures, EditOperation.Delete, lineFeature1, index: 1);
+            var editedFeature = EditObject(affectedFeatures, EditOperation.Delete, lineFeature1, index: 1);
 
 
             // 3. Return updated polygon.
@@ -677,6 +677,120 @@ namespace DeltGeometriFelleskomponent.Tests
 
         }
 
-    }
+        private NgisFeature? EditObject(List<NgisFeature> affectedFeatures, EditOperation editOperation, NgisFeature lineFeature, int index, Coordinate? newCoordinate = null)
+        {
+            switch (editOperation)
+            {
+                case EditOperation.Edit:
+                    {
+                        if (newCoordinate == null)
+                        {
+                            throw new Exception("Missing Coordinate value");
+                        }
 
+                        var currentLinestring = (LineString)lineFeature.Geometry;
+                        var currentCoordinate = currentLinestring[index].CoordinateValue;
+                        currentCoordinate.CoordinateValue = newCoordinate;
+                        return lineFeature;
+                    }
+
+                case EditOperation.Delete:
+                    {
+                        var currentLinestring = (LineString)lineFeature.Geometry;
+                        lineFeature.Geometry = DeletePoint(currentLinestring, index);
+                        return lineFeature;
+                    }
+
+                case EditOperation.Insert:
+                    {
+                        if (newCoordinate == null)
+                        {
+                            throw new Exception("Missing Coordinate value");
+                        }
+
+                        var currentLinestring = (LineString)lineFeature.Geometry;
+                        lineFeature.Geometry = InsertPoint(currentLinestring, index, newCoordinate);
+                        return lineFeature;
+                    }
+            }
+
+            return null;
+        }
+
+        Geometry InsertPoint(Geometry geom, int index, Coordinate newPoint)
+        {
+
+            var element = (LineString)geom;
+
+            var oldSeq = element.CoordinateSequence;
+            var newSeq = element.Factory.CoordinateSequenceFactory.Create(
+                oldSeq.Count + 1, oldSeq.Dimension, oldSeq.Measures);
+
+            if (index == 0)
+            {
+                // Before first point
+                newSeq.SetCoordinate(0, newPoint);
+                CoordinateSequences.Copy(oldSeq, 0, newSeq, 1, oldSeq.Count);
+            }
+            else if (index == oldSeq.Count - 1)
+            {
+                // Last point
+                CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, oldSeq.Count);
+                newSeq.SetCoordinate(oldSeq.Count, newPoint);
+            }
+            else
+            {
+                CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, index + 1);
+                newSeq.SetCoordinate(index + 1, newPoint);
+                CoordinateSequences.Copy(oldSeq, index + 1, newSeq, index + 2, newSeq.Count - 2 - index);
+            }
+
+            var linestring = geom.Factory.CreateLineString(newSeq);
+            return linestring;
+        }
+
+        Geometry DeletePoint(Geometry geom, int index)
+        {
+            var element = (LineString)geom;
+            if (element.Count < 3)
+            {
+                throw new InvalidOperationException();
+            }
+            var oldSeq = element.CoordinateSequence;
+            var newSeq = element.Factory.CoordinateSequenceFactory.Create(
+                oldSeq.Count - 1, oldSeq.Dimension, oldSeq.Measures);
+
+            if (index == 0)
+            {
+                // first point
+                CoordinateSequences.Copy(oldSeq, 1, newSeq, 0, newSeq.Count);
+            }
+            else if (index == oldSeq.Count - 1)
+            {
+                // Last point
+                CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, newSeq.Count);
+            }
+            else
+            {
+                CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, index);
+                CoordinateSequences.Copy(oldSeq, index + 1, newSeq, index, newSeq.Count - index);
+            }
+
+            var linestring = geom.Factory.CreateLineString(newSeq);
+            return linestring;
+
+
+
+        }
+
+    }
+    internal static class ICoordinateSequenceEx
+    {
+        public static void SetCoordinate(this CoordinateSequence self, int index, Coordinate coord)
+        {
+            self.SetOrdinate(index, Ordinate.X, coord.X);
+            self.SetOrdinate(index, Ordinate.Y, coord.Y);
+            if (self.Dimension > 2) self.SetOrdinate(index, Ordinate.Z, coord.Z);
+        }
+    }
 }

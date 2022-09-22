@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="EditOperation - Copy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="NetTopologySuite" Version="2.4.0" />
     <PackageReference Include="NetTopologySuite.Features" Version="2.1.0" />
   </ItemGroup>
