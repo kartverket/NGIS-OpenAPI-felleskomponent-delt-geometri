@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="TopologyImplementationTest - Copy %282%29.cs" />
+    <Compile Remove="TopologyImplementationTest - Copy %283%29.cs" />
     <Compile Remove="TopologyImplementationTest - Copy.cs" />
   </ItemGroup>
 

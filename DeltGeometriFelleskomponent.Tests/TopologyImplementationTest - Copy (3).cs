@@ -62,7 +62,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
             var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             {
-                //Type = "Kaiomrï¿½de",
+                //Type = "Kaiområde",
                 Feature = NgisFeatureHelper.CreateFeature(polygon, id, Operation.Create)
             });
 
@@ -101,17 +101,17 @@ namespace DeltGeometriFelleskomponent.Tests
 
             var linestring = new LineString(linearRing.Coordinates);
 
-            //Type = "Kaiomrï¿½deGrense"
+            //Type = "KaiområdeGrense"
             var lineFeature = NgisFeatureHelper.CreateFeature(linestring, id, Operation.Create);
 
-            //Type = "Kaiomrï¿½de",
+            //Type = "Kaiområde",
 
             // _topologyImplementation.CreatePolygonFromLines replaces _topologyImplementation.ResolveReferences
-            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = new List<NgisFeature>() { lineFeature },
                 Centroid = null
-            }).First();
+            });
 
             //var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             //{
@@ -164,7 +164,7 @@ namespace DeltGeometriFelleskomponent.Tests
                 new Coordinate(100, 100)
             });
 
-            //Type = "Kaiomrï¿½deGrense"
+            //Type = "KaiområdeGrense"
             var lineFeature = NgisFeatureHelper.CreateFeature(linestring, id, Operation.Create);
 
 
@@ -192,7 +192,7 @@ namespace DeltGeometriFelleskomponent.Tests
                 });
 
             }
-            // Type = "Kaiomrï¿½deGrense"
+            // Type = "KaiområdeGrense"
             var lineFeature2 = NgisFeatureHelper.CreateFeature(linestring2, id2, Operation.Create);
 
 
@@ -226,14 +226,14 @@ namespace DeltGeometriFelleskomponent.Tests
                 features = new List<NgisFeature>() { lineFeature, lineFeature2 };
             }
 
-            //Type = "Kaiomrï¿½de"
+            //Type = "Kaiområde"
 
             // _topologyImplementation.CreatePolygonFromLines replaces _topologyImplementation.ResolveReferences
-            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
                 Centroid = centroid
-            }).First();
+            });
 
             //var feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, new List<IEnumerable<string>>());
             //var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
@@ -274,9 +274,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var feature3References = NgisFeatureHelper.GetExteriors(featurePolygon);
             Assert.Equal(2, feature3References.Count);
             Assert.Equal(feature3References.First(), NgisFeatureHelper.GetLokalId(feature1));
-            
-            //we disregard the direction of the reference here, since I cannot wrap my head around this test
-            Assert.Equal(RemoveSign(feature3References.Last()), NgisFeatureHelper.GetLokalId(feature2));
+            Assert.Equal(feature3References.Last(), NgisFeatureHelper.GetLokalId(feature2));
 
             if (insideCheck)
             {
@@ -327,7 +325,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
             }
 
-            //Type = "Kaiomrï¿½deGrense"
+            //Type = "KaiområdeGrense"
             var lineFeature = NgisFeatureHelper.CreateFeature(linestring, id, Operation.Create);
 
 
@@ -367,22 +365,22 @@ namespace DeltGeometriFelleskomponent.Tests
 
             }
 
-            //Type = "Kaiomrï¿½deGrense"
+            //Type = "KaiområdeGrense"
             var lineFeature2 = NgisFeatureHelper.CreateFeature(linestring2, id2, Operation.Create);
 
 
             Point? centroid = null;
 
             // _topologyImplementation.CreatePolygonFromLines replaces _topologyImplementation.ResolveReferences
-            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+            var res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = new List<NgisFeature>() { lineFeature, lineFeature2 },
                 Centroid = centroid
-            }).First();
+            });
 
             //var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
             //{
-            //    //Type = "Kaiomrï¿½de",
+            //    //Type = "Kaiområde",
             //    //Centroid = centroid
             //    Feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, new List<IEnumerable<string>>()),
             //    AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2 }
@@ -515,12 +513,12 @@ namespace DeltGeometriFelleskomponent.Tests
                 // specify only exterior as linestrings, and let the topologyImplementation (NTS) fix the holes
                 // _topologyImplementation.CreatePolygonFromLines replaces _topologyImplementation.ResolveReferences
                 feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2, id3Hole1, id4Hole1, id3Hole2, id4Hole2 }, null);
-                res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+                res = _topologyImplementation.CreatePolygonFromLines(new CreatePolygonFromLinesRequest()
                 {
                     // Features = new List<NgisFeature>() { lineFeature, lineFeature2 },
                     Features = new List<NgisFeature>() { lineFeature, lineFeature2, lineFeature1Hole1, lineFeature2Hole1, lineFeature1Hole2, lineFeature2Hole2 },
                     Centroid = centroid
-                }).First();
+                });
 
             }
 
@@ -569,12 +567,11 @@ namespace DeltGeometriFelleskomponent.Tests
             var featureHolesReferences = NgisFeatureHelper.GetInteriors(featurePolygon);
             foreach (var hole in featureHolesReferences)
             {
-                //we disregard the direction of the reference here, since I cannot wrap my head around this test
-                Assert.Equal(RemoveSign(featureHolesReferences.First().First()), NgisFeatureHelper.GetLokalId(lineFeature1Hole1));
-                Assert.Equal(RemoveSign(featureHolesReferences.First().Last()), NgisFeatureHelper.GetLokalId(lineFeature2Hole1));
+                Assert.Equal(featureHolesReferences.First().First(), NgisFeatureHelper.GetLokalId(lineFeature1Hole1));
+                Assert.Equal(featureHolesReferences.First().Last(), NgisFeatureHelper.GetLokalId(lineFeature2Hole1));
 
-                Assert.Equal(RemoveSign(featureHolesReferences.Last().First()), NgisFeatureHelper.GetLokalId(lineFeature1Hole2));
-                Assert.Equal(RemoveSign(featureHolesReferences.Last().Last()), NgisFeatureHelper.GetLokalId(lineFeature2Hole2));
+                Assert.Equal(featureHolesReferences.Last().First(), NgisFeatureHelper.GetLokalId(lineFeature1Hole2));
+                Assert.Equal(featureHolesReferences.Last().Last(), NgisFeatureHelper.GetLokalId(lineFeature2Hole2));
 
             }
 
@@ -584,14 +581,12 @@ namespace DeltGeometriFelleskomponent.Tests
 
         }
 
-        private static string RemoveSign(string reference)
-            => reference.StartsWith("-") ? reference[1..] : reference;
-        
-
         [Fact]
         public void MovePointOnReferencedLine()
         {
-            var affectedFeatures = GetLinesAndPolygonWhenCreatingPolygonFrom2Lines();
+            // 1. Create polygons with referenced lines
+            // 2. Move a point on the referenced line
+            // 3. Return updated polygon.
 
             //// 1. Create polygons with referenced lines
             var affectedFeatures = GetLinesAndPolygonWhenCreatingPolygonFrom2Lines();
@@ -651,11 +646,6 @@ namespace DeltGeometriFelleskomponent.Tests
 
         }
 
-            var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
-            {
-                Features = new List<NgisFeature>() { lineFeature1, lineFeature2 },
-                Centroid = null
-            }).First();
         [Fact]
         public void DeletePointOnReferencedLine()
         {
@@ -687,8 +677,6 @@ namespace DeltGeometriFelleskomponent.Tests
 
         }
 
-            Assert.True(res.IsValid, "Unable to move point on polygon");
-       }
     }
 
 }

@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="GeometryEdit - Copy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DeltGeometriFelleskomponent.Models\DeltGeometriFelleskomponent.Models.csproj" />
   </ItemGroup>
 
