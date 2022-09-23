@@ -654,14 +654,12 @@ namespace DeltGeometriFelleskomponent.Tests
                 Edit = new EditLineOperation()
                 {
                     Operation = EditOperation.Insert,
-                    NodeIndex = 1,
+                    NodeIndex = 2,
                     NodeValue = new List<double>() {insertCoordinateCoordinate.X, insertCoordinateCoordinate.Y }
                 }
             });
-                
-                
-                
-               
+            output.WriteLine("editedFeature: " + editedFeature.Geometry.ToString());
+            
 
             var coordinateCount2 = lineFeature1.Geometry.Coordinates.Length;
 

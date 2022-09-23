@@ -5,6 +5,11 @@ namespace DeltGeometriFelleskomponent.Models;
 
 public static class NgisFeatureHelper
 {
+    public static NgisFeature Copy(NgisFeature feature) => new()
+    {
+        Properties = feature.Properties, Geometry_Properties = feature.Geometry_Properties,
+        Geometry = feature.Geometry.Copy(), Update = feature.Update
+    };
 
     public static string? GetLokalId(NgisFeature feature)
     {
