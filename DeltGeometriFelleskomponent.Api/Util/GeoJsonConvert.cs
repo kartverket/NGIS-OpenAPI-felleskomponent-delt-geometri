@@ -57,7 +57,7 @@ public class GeoJsonConverter : JsonConverter
         typeof(MultiLineString),
         typeof(Polygon),
         typeof(MultiPolygon),
-        typeof(GeometryCollection)
+        typeof(GeometryCollection),
     };
 
 }

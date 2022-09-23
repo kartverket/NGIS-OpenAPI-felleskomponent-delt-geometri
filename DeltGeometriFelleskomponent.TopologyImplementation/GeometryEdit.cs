@@ -1,17 +1,18 @@
 ﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation
 {
     public class GeometryEdit
     {
-        public static NgisFeature? EditObject(List<NgisFeature> affectedFeatures, EditOperation editOperation, NgisFeature lineFeature, int index, Coordinate? newCoordinate = null)
+        public static NgisFeature? EditObject(EditLineRequest request)
         {
+            var affectedFeatures = request.AffectedFeatures;
+            var editOperation = request.Edit.Operation;
+            var lineFeature = request.Feature;
+            var index = request.Edit.NodeIndex;
+            var newCoordinate = request.Edit.NodeCoordinate;
             // TODO: Implement more advanced editing when we edit on a "node" or a shared geometry line
             switch (editOperation)
             {

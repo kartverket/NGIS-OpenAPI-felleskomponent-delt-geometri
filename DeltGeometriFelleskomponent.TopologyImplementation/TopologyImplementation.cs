@@ -19,6 +19,16 @@ public class TopologyImplementation : ITopologyImplementation
     public IEnumerable<TopologyResponse> CreatePolygonsFromLines(CreatePolygonFromLinesRequest request)
         => _polygonCreator.CreatePolygonFromLines(request.Features, request.Centroids);
 
+    public TopologyResponse EditLine(EditLineRequest request)
+    {
+        var res = GeometryEdit.EditObject(request);
+        return new TopologyResponse()
+        {
+            AffectedFeatures = new List<NgisFeature>() { res },
+            IsValid = true
+        };
+    }
+
     private TopologyResponse HandleCreate(ToplogyRequest request)
         => request.Feature.Geometry switch
         {

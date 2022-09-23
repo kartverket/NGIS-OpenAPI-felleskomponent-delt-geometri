@@ -601,7 +601,19 @@ namespace DeltGeometriFelleskomponent.Tests
             lineStringModified[1].Y += 20;
 
             var movedCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var editedFeature = GeometryEdit.EditObject(affectedFeatures, EditOperation.Edit, lineFeature1, index: 1, newCoordinate: movedCoordinate);
+            var editedFeature = GeometryEdit.EditObject(new EditLineRequest()
+            {
+                AffectedFeatures = affectedFeatures,
+                Feature = lineFeature1,
+                Edit = new EditLineOperation()
+                {
+                    Operation = EditOperation.Edit,
+                    NodeIndex = 1,
+                    NodeValue = new List<double>(){ movedCoordinate.X, movedCoordinate.Y }
+                },
+            });
+                
+                
 
             // 3. Return updated polygon.
             var features = new List<NgisFeature>() { editedFeature, lineFeature2 };
@@ -635,7 +647,21 @@ namespace DeltGeometriFelleskomponent.Tests
             lineStringModified[1].X += 10;
             lineStringModified[1].Y += 20;
             var insertCoordinateCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var editedFeature = GeometryEdit.EditObject(affectedFeatures, EditOperation.Insert, lineFeature1, index: 1, newCoordinate: insertCoordinateCoordinate);
+            var editedFeature = GeometryEdit.EditObject(new EditLineRequest()
+            {
+                AffectedFeatures = affectedFeatures,
+                Feature = lineFeature1,
+                Edit = new EditLineOperation()
+                {
+                    Operation = EditOperation.Insert,
+                    NodeIndex = 1,
+                    NodeValue = new List<double>() {insertCoordinateCoordinate.X, insertCoordinateCoordinate.Y }
+                }
+            });
+                
+                
+                
+               
 
             var coordinateCount2 = lineFeature1.Geometry.Coordinates.Length;
 
@@ -672,8 +698,17 @@ namespace DeltGeometriFelleskomponent.Tests
             //lineStringModified[1].X += 10;
             //lineStringModified[1].Y += 20;
             //var insertCoordinateCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var editedFeature = GeometryEdit.EditObject(affectedFeatures, EditOperation.Delete, lineFeature1, index: 1);
-
+            var editedFeature = GeometryEdit.EditObject(new EditLineRequest()
+            {
+                AffectedFeatures = affectedFeatures,
+                Feature = lineFeature1,
+                Edit = new EditLineOperation()
+                {
+                    Operation = EditOperation.Delete,
+                    NodeIndex = 1
+                }
+            });
+            
             var coordinateCount2 = lineFeature1.Geometry.Coordinates.Length;
             // 3. Return updated polygon.
             var features = new List<NgisFeature>() { editedFeature, lineFeature2 };
