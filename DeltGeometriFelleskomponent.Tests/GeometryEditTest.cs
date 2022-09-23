@@ -101,7 +101,7 @@ public class GeometryEditTest : TestBase
                 NodeValue = new List<double>() { 100, 100 }
             }
         });
-
+        output.WriteLine("editedFeature: " + res.Geometry);
         Assert.Equal(4, res.Geometry.Coordinates.Length);
         Assert.Equal(LineFeature.Geometry.Coordinates[0].X, res.Geometry.Coordinates[0].X);
         Assert.Equal(LineFeature.Geometry.Coordinates[1].X, res.Geometry.Coordinates[1].X);
@@ -123,7 +123,7 @@ public class GeometryEditTest : TestBase
                 NodeValue = new List<double>() { 100, 100 }
             }
         });
-
+        output.WriteLine("editedFeature: " + res.Geometry);
         Assert.Equal(4, res.Geometry.Coordinates.Length);
         Assert.Equal(LineFeature.Geometry.Coordinates[0].X, res.Geometry.Coordinates[0].X);
         Assert.Equal(LineFeature.Geometry.Coordinates[1].X, res.Geometry.Coordinates[1].X);

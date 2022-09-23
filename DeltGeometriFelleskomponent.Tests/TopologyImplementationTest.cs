@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace DeltGeometriFelleskomponent.Tests
 {
-    public class TopologyImplementationTest
+    public class TopologyImplementationTest: TestBase
     {
         private readonly ITopologyImplementation _topologyImplementation =
             new TopologyImplementation.TopologyImplementation();
@@ -276,7 +276,7 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal(feature3References.First(), NgisFeatureHelper.GetLokalId(feature1));
 
             //we disregard the direction of the reference here, since I cannot wrap my head around this test
-            Assert.Equal(RemoveSign(feature3References.Last()), NgisFeatureHelper.GetLokalId(feature2));
+            Assert.Equal(NgisFeatureHelper.RemoveSign(feature3References.Last()), NgisFeatureHelper.GetLokalId(feature2));
 
             if (insideCheck)
             {
@@ -568,11 +568,11 @@ namespace DeltGeometriFelleskomponent.Tests
             foreach (var hole in featureHolesReferences)
             {
                 //we disregard the direction of the reference here, since I cannot wrap my head around this test
-                Assert.Equal(RemoveSign(featureHolesReferences.First().First()), NgisFeatureHelper.GetLokalId(lineFeature1Hole1));
-                Assert.Equal(RemoveSign(featureHolesReferences.First().Last()), NgisFeatureHelper.GetLokalId(lineFeature2Hole1));
+                Assert.Equal(NgisFeatureHelper.RemoveSign(featureHolesReferences.First().First()), NgisFeatureHelper.GetLokalId(lineFeature1Hole1));
+                Assert.Equal(NgisFeatureHelper.RemoveSign(featureHolesReferences.First().Last()), NgisFeatureHelper.GetLokalId(lineFeature2Hole1));
 
-                Assert.Equal(RemoveSign(featureHolesReferences.Last().First()), NgisFeatureHelper.GetLokalId(lineFeature1Hole2));
-                Assert.Equal(RemoveSign(featureHolesReferences.Last().Last()), NgisFeatureHelper.GetLokalId(lineFeature2Hole2));
+                Assert.Equal(NgisFeatureHelper.RemoveSign(featureHolesReferences.Last().First()), NgisFeatureHelper.GetLokalId(lineFeature1Hole2));
+                Assert.Equal(NgisFeatureHelper.RemoveSign(featureHolesReferences.Last().Last()), NgisFeatureHelper.GetLokalId(lineFeature2Hole2));
 
             }
 
@@ -581,11 +581,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
 
         }
-
-        private static string RemoveSign(string reference)
-            => reference.StartsWith("-") ? reference[1..] : reference;
-
-
+        
         [Fact]
         public void MovePointOnReferencedLine()
         {
@@ -723,6 +719,42 @@ namespace DeltGeometriFelleskomponent.Tests
 
             Assert.True(res.IsValid, "Unable to delete point on polygon");
 
+        }
+
+
+        [Fact]
+        public void HandlesDeleteOfNodeInLineUsedByAPolygon()
+        {
+            var line1 = GetExampleFeature("1");
+            var line2 = GetExampleFeature("2");
+            var polygonFeature = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+                { Features = new List<NgisFeature>() { line1, line2 } }).First().AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+            
+            var request = new EditLineRequest()
+            {
+                Feature = line1,
+                Edit = new EditLineOperation()
+                {
+                    NodeIndex = 1,
+                    Operation = EditOperation.Delete
+                },
+                AffectedFeatures = new List<NgisFeature>() { line2, NgisFeatureHelper.Copy(polygonFeature!) }
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+            
+            Assert.Equal(3, response.AffectedFeatures.Count);
+            
+            var editedPolygonFeature = response.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon")!;
+
+
+            var polygon = (Polygon) polygonFeature!.Geometry;
+            var editedPolygon = (Polygon)editedPolygonFeature.Geometry;
+            
+
+            Assert.Equal(polygon.Shell.Coordinates.Length - 1, editedPolygon.Shell.Coordinates.Length);
+
+            
         }
     }
 }

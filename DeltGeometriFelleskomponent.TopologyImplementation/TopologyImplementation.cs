@@ -21,13 +21,64 @@ public class TopologyImplementation : ITopologyImplementation
 
     public TopologyResponse EditLine(EditLineRequest request)
     {
+        if (request.Feature.Geometry.GeometryType != "LineString")
+        {
+            throw new ArgumentException("Can only edit line features");
+        }
+
         var res = GeometryEdit.EditObject(request);
+
+        if (res == null)
+        {
+            return new TopologyResponse()
+            {
+                AffectedFeatures = new List<NgisFeature>() {},
+                IsValid = false
+            };
+        }
+
+        var lineFeatures = request.AffectedFeatures.FindAll(f => f.Geometry.GeometryType != "Polygon");
+        lineFeatures.Add(res);
+        //get all polygons in affected features
+        var polygons = request.AffectedFeatures.FindAll(f => f.Geometry.GeometryType == "Polygon");
+
+        //for each of the polygons, rebuild geometry
+        var editedPolygons = polygons.Select(p =>
+        {
+            var references = GetReferencedFeatures(p, lineFeatures);
+            var created = CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+                { Features = references.ToList(), Centroids = new List<Point>() { p.Geometry.Centroid } }).FirstOrDefault();
+
+            if (created == null)
+            {
+                return null;
+            }
+
+            if (!created.IsValid)
+            {
+                return null;
+            }
+
+            var geometry = created.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon")?.Geometry;
+            if (geometry == null)
+            {
+                return null;
+            }
+            p.Geometry = geometry;
+            return p;
+        });
+
+        var isValid = editedPolygons.All(p => p != null);
         return new TopologyResponse()
         {
-            AffectedFeatures = new List<NgisFeature>() { res },
-            IsValid = true
+            AffectedFeatures = isValid ? polygons.Select(polygon => GetReferencedFeatures(polygon, lineFeatures).Concat(new List<NgisFeature>() { polygon })).SelectMany(p => p).ToList() : new List<NgisFeature>(),
+            IsValid = isValid
         };
     }
+
+    private static IEnumerable<NgisFeature> GetReferencedFeatures(NgisFeature feature, List<NgisFeature> candidates)
+        => NgisFeatureHelper.GetAllReferences(feature).Select(lokalId => candidates.Find(f => NgisFeatureHelper.GetLokalId(f) == lokalId)).OfType<NgisFeature>();
+    
 
     private TopologyResponse HandleCreate(ToplogyRequest request)
         => request.Feature.Geometry switch
