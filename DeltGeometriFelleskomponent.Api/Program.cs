@@ -28,26 +28,6 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<ITopologyImplementation, TopologyImplementation>();
 
-
-/*
-builder.Services.Configure<JsonOptions>(options =>
-{
-    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    //options.JsonSerializerOptions.Converters.Add(new NetTopologySuite.IO.Converters.GeoJsonConverterFactory());
-
-    var geometryFactoryEx = new GeometryFactoryEx(new PrecisionModel(), 4326)
-    {
-        OrientationOfExteriorRing = LinearRingOrientation.CounterClockwise,
-        
-
-    };
-
-    options.JsonSerializerOptions.Converters.Add(new GeoJsonConverterFactory(geometryFactoryEx));
-
-});
-*/
-
 builder.Services.AddOpenApiDocument(config =>
 {
     config.Title = "NGIS Felleskomponent";
