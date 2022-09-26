@@ -24,8 +24,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
                 EditOperation.Insert => InsertPoint(existingGeometry, index, newCoordinate),
             };
 
-            return lineFeature;
-            
+            return NgisFeatureHelper.SetOperation2(lineFeature, Operation.Replace);
         }
 
         private static LineString ReplaceNode(LineString line, int index, Coordinate? newValue)

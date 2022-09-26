@@ -115,8 +115,12 @@ public static class NgisFeatureHelper
         feature.Update.Action = operation;
     }
 
+    public static NgisFeature SetOperation2(NgisFeature feature, Operation operation)
+    {
+        SetOperation(feature, operation);
+        return feature;
+    }
     
-
     public static NgisFeature EnsureLocalId(NgisFeature feature)
     {
         if (GetLokalId(feature) == null)

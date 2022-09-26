@@ -81,9 +81,17 @@ public class TopologyImplementation : ITopologyImplementation
         });
 
         var isValid = editedPolygons.All(p => p != null);
+        var affectedFeatures = isValid
+            ? polygons
+                .Select(polygon =>
+                    GetReferencedFeatures(polygon, lineFeatures).Concat(new List<NgisFeature>() { polygon }))
+                .SelectMany(p => p)
+                .Select(f => NgisFeatureHelper.SetOperation2(f, Operation.Replace)).ToList()
+            : new List<NgisFeature>();
+
         return new TopologyResponse()
         {
-            AffectedFeatures = isValid ? polygons.Select(polygon => GetReferencedFeatures(polygon, lineFeatures).Concat(new List<NgisFeature>() { polygon })).SelectMany(p => p).ToList() : new List<NgisFeature>(),
+            AffectedFeatures = affectedFeatures,
             IsValid = isValid
         };
     }
