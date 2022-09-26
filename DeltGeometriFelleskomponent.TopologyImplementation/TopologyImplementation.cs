@@ -37,10 +37,22 @@ public class TopologyImplementation : ITopologyImplementation
             };
         }
 
-        var lineFeatures = request.AffectedFeatures.FindAll(f => f.Geometry.GeometryType != "Polygon");
-        lineFeatures.Add(res);
         //get all polygons in affected features
         var polygons = request.AffectedFeatures.FindAll(f => f.Geometry.GeometryType == "Polygon");
+
+        if (polygons.Count == 0)
+        {
+            return new TopologyResponse()
+            {
+                AffectedFeatures = new List<NgisFeature>() { res },
+                IsValid = true
+            };
+        }
+
+
+        var lineFeatures = request.AffectedFeatures.FindAll(f => f.Geometry.GeometryType != "Polygon");
+        lineFeatures.Add(res);
+        
 
         //for each of the polygons, rebuild geometry
         var editedPolygons = polygons.Select(p =>
