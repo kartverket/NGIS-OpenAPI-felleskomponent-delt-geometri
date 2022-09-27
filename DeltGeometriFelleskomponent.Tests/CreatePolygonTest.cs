@@ -20,7 +20,7 @@ public class CreatePolygonTest: TestBase
     {
         var feature = ReadFeature(@"Examples\polygon_create.geojson");
 
-        var result = _topologyImplementation.ResolveReferences(new ToplogyRequest() { Feature = feature });
+        var result = _topologyImplementation.CreateGeometry(new CreateGeometryRequest() { Feature = feature });
 
         //we should get back the polygon and a linestring
         Assert.Equal(2, result.AffectedFeatures.Count);
@@ -56,7 +56,7 @@ public class CreatePolygonTest: TestBase
     {
         var feature = ReadFeature(@"Examples\polygon_with_hole_create.geojson");
 
-        var result = _topologyImplementation.ResolveReferences(new ToplogyRequest() { Feature = feature });
+        var result = _topologyImplementation.CreateGeometry(new CreateGeometryRequest() { Feature = feature });
 
         //we should get back the polygon and two linestrings (one exterior, one interior)
         Assert.Equal(3, result.AffectedFeatures.Count);

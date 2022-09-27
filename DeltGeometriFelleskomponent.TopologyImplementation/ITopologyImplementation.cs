@@ -4,7 +4,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
 public interface ITopologyImplementation
 {
-    TopologyResponse ResolveReferences(ToplogyRequest request);
+    TopologyResponse CreateGeometry(CreateGeometryRequest request);
 
     IEnumerable<TopologyResponse> CreatePolygonsFromLines(CreatePolygonFromLinesRequest request);
 

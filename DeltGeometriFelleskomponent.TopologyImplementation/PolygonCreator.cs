@@ -8,7 +8,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
 public class PolygonCreator
 {
-    public TopologyResponse CreatePolygonFromGeometry(ToplogyRequest request)
+    public TopologyResponse CreatePolygonFromGeometry(CreateGeometryRequest request)
     {
         request.Feature.Geometry = EnsureOrdering((Polygon)request.Feature.Geometry);
         request.Feature = NgisFeatureHelper.EnsureLocalId(request.Feature);

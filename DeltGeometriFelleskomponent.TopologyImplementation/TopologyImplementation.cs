@@ -7,13 +7,17 @@ public class TopologyImplementation : ITopologyImplementation
 {
     private readonly PolygonCreator _polygonCreator = new();
 
-    public TopologyResponse ResolveReferences(ToplogyRequest request)
-        => request.Feature.Update?.Action switch
+    public TopologyResponse CreateGeometry(CreateGeometryRequest request)
+        => request.Feature.Geometry switch
         {
-            Operation.Create => HandleCreate(request),
-            Operation.Erase => HandleDelete(request),
-            Operation.Replace => HandleUpdate(request),
-            null => throw new ArgumentException("")
+            Polygon => HandlePolygon(request),
+            Geometry => new TopologyResponse()
+            {
+                AffectedFeatures = new List<NgisFeature>() { NgisFeatureHelper.EnsureLocalId(request.Feature) },
+                IsValid = true
+            },
+            null => new TopologyResponse()
+
         };
 
     public IEnumerable<TopologyResponse> CreatePolygonsFromLines(CreatePolygonFromLinesRequest request)
@@ -99,21 +103,8 @@ public class TopologyImplementation : ITopologyImplementation
     private static IEnumerable<NgisFeature> GetReferencedFeatures(NgisFeature feature, List<NgisFeature> candidates)
         => NgisFeatureHelper.GetAllReferences(feature).Select(lokalId => candidates.Find(f => NgisFeatureHelper.GetLokalId(f) == lokalId)).OfType<NgisFeature>();
     
-
-    private TopologyResponse HandleCreate(ToplogyRequest request)
-        => request.Feature.Geometry switch
-        {
-            Polygon => HandlePolygon(request),
-            Geometry => new TopologyResponse()
-            {
-                AffectedFeatures = new List<NgisFeature>() { NgisFeatureHelper.EnsureLocalId(request.Feature) },
-                IsValid = true
-            },
-            null => new TopologyResponse()
-
-        };
     
-    private TopologyResponse HandlePolygon(ToplogyRequest request)
+    private TopologyResponse HandlePolygon(CreateGeometryRequest request)
     {
         var result = new TopologyResponse()
         {
@@ -133,12 +124,12 @@ public class TopologyImplementation : ITopologyImplementation
         return _polygonCreator.CreatePolygonFromGeometry(request);
     }
 
-    private TopologyResponse HandleDelete(ToplogyRequest request)
+    private TopologyResponse HandleDelete(CreateGeometryRequest request)
     {
         throw new NotImplementedException();
     }
 
-    private TopologyResponse HandleUpdate(ToplogyRequest request)
+    private TopologyResponse HandleUpdate(CreateGeometryRequest request)
     {
         throw new NotImplementedException();
     }

@@ -108,9 +108,9 @@ namespace DeltGeometriFelleskomponent.Api.Controllers
         ///     }
         ///
         /// </remarks>
-        [HttpPost(template:"resolveReferences")]
-        public TopologyResponse Change([FromBody] ToplogyRequest request)
-            => _topologyImplementation.ResolveReferences(request);
+        [HttpPost(template:"createGeometry")]
+        public TopologyResponse Change([FromBody] CreateGeometryRequest request)
+            => _topologyImplementation.CreateGeometry(request);
 
         /// <summary>
         /// Create a polygon feature given a set of line features and an optional centroid

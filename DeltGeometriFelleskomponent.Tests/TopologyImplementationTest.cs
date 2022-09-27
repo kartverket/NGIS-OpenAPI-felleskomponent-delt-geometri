@@ -33,7 +33,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var point = new Point(1, 2);
             var id = Guid.NewGuid().ToString();
 
-            var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
+            var res = _topologyImplementation.CreateGeometry(new CreateGeometryRequest()
             {
                 Feature = NgisFeatureHelper.CreateFeature(point, id, Operation.Create)
 
@@ -60,7 +60,7 @@ namespace DeltGeometriFelleskomponent.Tests
             var polygon = new Polygon(linearRing);
             var id = Guid.NewGuid().ToString();
 
-            var res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
+            var res = _topologyImplementation.CreateGeometry(new CreateGeometryRequest()
             {
                 //Type = "Kaiomr�de",
                 Feature = NgisFeatureHelper.CreateFeature(polygon, id, Operation.Create)
@@ -502,7 +502,7 @@ namespace DeltGeometriFelleskomponent.Tests
                 // specify bpthh exterior and interior
                 feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, interiors);
                 //res = _topologyImplementation.CreatePolygonFromGeometry(new ToplogyRequest()
-                res = _topologyImplementation.ResolveReferences(new ToplogyRequest()
+                res = _topologyImplementation.CreateGeometry(new CreateGeometryRequest()
                 {
                     Feature = feature,
                     AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2, lineFeature1Hole1, lineFeature2Hole1, lineFeature1Hole2, lineFeature2Hole2 }
