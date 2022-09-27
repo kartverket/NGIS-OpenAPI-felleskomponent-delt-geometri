@@ -19,6 +19,87 @@ public class TopologyImplementation : ITopologyImplementation
     public IEnumerable<TopologyResponse> CreatePolygonsFromLines(CreatePolygonFromLinesRequest request)
         => _polygonCreator.CreatePolygonFromLines(request.Features, request.Centroids);
 
+    public TopologyResponse EditLine(EditLineRequest request)
+    {
+        if (request.Feature.Geometry.GeometryType != "LineString")
+        {
+            throw new ArgumentException("Can only edit line features");
+        }
+
+        var res = GeometryEdit.EditObject(request);
+
+        if (res == null)
+        {
+            return new TopologyResponse()
+            {
+                AffectedFeatures = new List<NgisFeature>() {},
+                IsValid = false
+            };
+        }
+
+        //get all polygons in affected features
+        var polygons = request.AffectedFeatures.FindAll(f => f.Geometry.GeometryType == "Polygon");
+
+        if (polygons.Count == 0)
+        {
+            return new TopologyResponse()
+            {
+                AffectedFeatures = new List<NgisFeature>() { res },
+                IsValid = true
+            };
+        }
+
+
+        var lineFeatures = request.AffectedFeatures.FindAll(f => f.Geometry.GeometryType != "Polygon");
+        lineFeatures.Add(res);
+        
+
+        //for each of the polygons, rebuild geometry
+        var editedPolygons = polygons.Select(p =>
+        {
+            var references = GetReferencedFeatures(p, lineFeatures);
+            var created = CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+                { Features = references.ToList(), Centroids = new List<Point>() { p.Geometry.Centroid } }).FirstOrDefault();
+
+            if (created == null)
+            {
+                return null;
+            }
+
+            if (!created.IsValid)
+            {
+                return null;
+            }
+
+            var geometry = created.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon")?.Geometry;
+            if (geometry == null)
+            {
+                return null;
+            }
+            p.Geometry = geometry;
+            return p;
+        });
+
+        var isValid = editedPolygons.All(p => p != null);
+        var affectedFeatures = isValid
+            ? polygons
+                .Select(polygon =>
+                    GetReferencedFeatures(polygon, lineFeatures).Concat(new List<NgisFeature>() { polygon }))
+                .SelectMany(p => p)
+                .Select(f => NgisFeatureHelper.SetOperation2(f, Operation.Replace)).ToList()
+            : new List<NgisFeature>();
+
+        return new TopologyResponse()
+        {
+            AffectedFeatures = affectedFeatures,
+            IsValid = isValid
+        };
+    }
+
+    private static IEnumerable<NgisFeature> GetReferencedFeatures(NgisFeature feature, List<NgisFeature> candidates)
+        => NgisFeatureHelper.GetAllReferences(feature).Select(lokalId => candidates.Find(f => NgisFeatureHelper.GetLokalId(f) == lokalId)).OfType<NgisFeature>();
+    
+
     private TopologyResponse HandleCreate(ToplogyRequest request)
         => request.Feature.Geometry switch
         {

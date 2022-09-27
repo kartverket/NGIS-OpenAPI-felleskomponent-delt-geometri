@@ -1,82 +1,98 @@
 ﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation
 {
     public class GeometryEdit
     {
-        public static NgisFeature? EditObject(List<NgisFeature> affectedFeatures, EditOperation editOperation, NgisFeature lineFeature, int index, Coordinate? newCoordinate = null)
+        public static NgisFeature? EditObject(EditLineRequest request)
         {
+            var affectedFeatures = request.AffectedFeatures;
+            var editOperation = request.Edit.Operation;
+            var lineFeature = request.Feature;
+            var index = request.Edit.NodeIndex;
+            var newCoordinate = request.Edit.NodeCoordinate;
             // TODO: Implement more advanced editing when we edit on a "node" or a shared geometry line
-            switch (editOperation)
+
+            var existingGeometry = (LineString)lineFeature.Geometry.Copy();
+
+            lineFeature.Geometry = editOperation switch
             {
-                case EditOperation.Edit:
-                    {
-                        if (newCoordinate == null)
-                        {
-                            throw new Exception("Missing Coordinate value");
-                        }
+                EditOperation.Edit => ReplaceNode(existingGeometry, index, newCoordinate),
+                EditOperation.Delete => DeletePoint(existingGeometry, index),
+                EditOperation.Insert => InsertPoint(existingGeometry, index, newCoordinate),
+            };
 
-                        var currentLinestring = (LineString)lineFeature.Geometry;
-                        var currentCoordinate = currentLinestring[index].CoordinateValue;
-                        currentCoordinate.CoordinateValue = newCoordinate;
-                        return lineFeature;
-                    }
-
-                case EditOperation.Delete:
-                    {
-                        var currentLinestring = (LineString)lineFeature.Geometry;
-                        lineFeature.Geometry = DeletePoint(currentLinestring, index);
-                        return lineFeature;
-                    }
-
-                case EditOperation.Insert:
-                    {
-                        if (newCoordinate == null)
-                        {
-                            throw new Exception("Missing Coordinate value");
-                        }
-
-                        var currentLinestring = (LineString)lineFeature.Geometry;
-                        lineFeature.Geometry = InsertPoint(currentLinestring, index, newCoordinate);
-                        return lineFeature;
-                    }
-            }
-
-            return null;
+            return NgisFeatureHelper.SetOperation2(lineFeature, Operation.Replace);
         }
 
-        private static Geometry InsertPoint(Geometry geom, int index, Coordinate newPoint)
+        private static LineString ReplaceNode(LineString line, int index, Coordinate? newValue)
         {
+            if (newValue == null)
+            {
+                throw new Exception("Missing Coordinate value");
+            }
 
+            var currentCoordinate = line[index].CoordinateValue;
+            currentCoordinate.CoordinateValue = newValue;
+            return line;
+        }
+
+        private static Geometry InsertPoint(Geometry geom, int index, Coordinate? newPoint)
+        {
+            if (newPoint == null)
+            {
+                throw new Exception("Missing Coordinate value");
+            }
+
+            var useOld = false;
             var element = (LineString)geom;
 
             var oldSeq = element.CoordinateSequence;
             var newSeq = element.Factory.CoordinateSequenceFactory.Create(
                 oldSeq.Count + 1, oldSeq.Dimension, oldSeq.Measures);
 
-            if (index == 0)
-            {
-                // Before first point
-                newSeq.SetCoordinate(0, newPoint);
-                CoordinateSequences.Copy(oldSeq, 0, newSeq, 1, oldSeq.Count);
-            }
-            else if (index == oldSeq.Count - 1)
-            {
-                // Last point
-                CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, oldSeq.Count);
-                newSeq.SetCoordinate(oldSeq.Count, newPoint);
+            if (useOld) {
+                if (index == 0)
+                {
+                    // Before first point
+                    newSeq.SetCoordinate(0, newPoint);
+                    CoordinateSequences.Copy(oldSeq, 0, newSeq, 1, oldSeq.Count);
+                }
+                else if (index == oldSeq.Count - 1)
+                {
+                    // Last point
+                    CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, oldSeq.Count);
+                    newSeq.SetCoordinate(oldSeq.Count, newPoint);
+                }
+                else
+                {
+                    CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, index + 1);
+                    newSeq.SetCoordinate(index + 1, newPoint);
+                    CoordinateSequences.Copy(oldSeq, index + 1, newSeq, index + 2, newSeq.Count - 2 - index);
+                }
             }
             else
             {
-                CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, index + 1);
-                newSeq.SetCoordinate(index + 1, newPoint);
-                CoordinateSequences.Copy(oldSeq, index + 1, newSeq, index + 2, newSeq.Count - 2 - index);
+                if (index == 0)
+                {
+                    // Before first point
+                    newSeq.SetCoordinate(0, newPoint);
+                    CoordinateSequences.Copy(oldSeq, 0, newSeq, 1, oldSeq.Count);
+                }
+                else if (index == oldSeq.Count)
+                {
+                    // Last point
+                    CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, oldSeq.Count);
+                    newSeq.SetCoordinate(oldSeq.Count, newPoint);
+                }
+                else
+                {
+                    CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, index );
+                    newSeq.SetCoordinate(index , newPoint);
+                    CoordinateSequences.Copy(oldSeq, index , newSeq, index +1 , newSeq.Count - 1 - index);
+                }
             }
 
             var linestring = geom.Factory.CreateLineString(newSeq);

@@ -5,6 +5,11 @@ namespace DeltGeometriFelleskomponent.Models;
 
 public static class NgisFeatureHelper
 {
+    public static NgisFeature Copy(NgisFeature feature) => new()
+    {
+        Properties = feature.Properties, Geometry_Properties = feature.Geometry_Properties,
+        Geometry = feature.Geometry.Copy(), Update = feature.Update
+    };
 
     public static string? GetLokalId(NgisFeature feature)
     {
@@ -76,6 +81,25 @@ public static class NgisFeatureHelper
         }
     }
 
+    public static List<string> GetAllReferences(NgisFeature feature)
+    {
+        var exteriorReferences = feature.Geometry_Properties?.Exterior;
+        var interiorReferences = feature.Geometry_Properties?.Interiors?.SelectMany(l => l).ToList();
+
+        var references = new List<string>();
+        if (exteriorReferences != null)
+        {
+            references = references.Concat(exteriorReferences).ToList();
+        }
+        if (interiorReferences != null)
+        {
+            references = references.Concat(interiorReferences).ToList();
+        }
+
+        return references.Select(NgisFeatureHelper.RemoveSign).ToList();
+
+    }
+
     public static List<string> GetExteriors(NgisFeature feature) => feature.Geometry_Properties?.Exterior ?? new List<string>();
 
     public static List<List<string>> GetInteriors(NgisFeature feature) => feature.Geometry_Properties?.Interiors ?? new List<List<string>>();
@@ -91,8 +115,12 @@ public static class NgisFeatureHelper
         feature.Update.Action = operation;
     }
 
+    public static NgisFeature SetOperation2(NgisFeature feature, Operation operation)
+    {
+        SetOperation(feature, operation);
+        return feature;
+    }
     
-
     public static NgisFeature EnsureLocalId(NgisFeature feature)
     {
         if (GetLokalId(feature) == null)
@@ -117,5 +145,8 @@ public static class NgisFeatureHelper
         feature.Properties = props;
         
     }
+
+    public static string RemoveSign(string reference)
+        => reference.StartsWith("-") ? reference[1..] : reference;
 
 }
