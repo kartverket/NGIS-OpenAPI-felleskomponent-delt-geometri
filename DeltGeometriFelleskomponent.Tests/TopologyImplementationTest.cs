@@ -790,10 +790,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
             Assert.True(response.IsValid);
             Assert.Equal(3, response.AffectedFeatures.Count);
-
-           // var editedPolygonFeature = response.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon")!;
-
-            
+     
             var editedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1");
             
             Assert.Equal(editedPoint[0], editedLine1.Geometry.Coordinates[0].X);
@@ -885,6 +882,46 @@ namespace DeltGeometriFelleskomponent.Tests
 
             Assert.Equal(line1.Geometry.Coordinates[1].X, editedLine2.Geometry.Coordinates[0].X);
             Assert.Equal(line1.Geometry.Coordinates[1].Y, editedLine2.Geometry.Coordinates[0].Y);
+        }
+
+
+        [Fact]
+        public void HandlesEditOfConnectingNodeInLineUsedByAPolygonThatUsesSingleLine()
+        {
+            var line1 = GetExampleFeature("8");
+            
+            var polygonFeature = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+                { Features = new List<NgisFeature>() { line1 } }).First().AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+
+            var point = line1.Geometry.Coordinates[0];
+            var editedPoint = new List<double>() { point.X + 0.001, point.Y + 0.001 };
+
+            var request = new EditLineRequest()
+            {
+                Feature = line1,
+                Edit = new EditLineOperation()
+                {
+                    NodeIndex = 0,
+                    NodeValue = editedPoint,
+                    Operation = EditOperation.Edit
+                },
+                AffectedFeatures = new List<NgisFeature>() {NgisFeatureHelper.Copy(polygonFeature!) }
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+
+            foreach (var affectedFeature in response.AffectedFeatures)
+            {
+                output.WriteLine($"affected: {NgisFeatureHelper.GetLokalId(affectedFeature)} : {affectedFeature.Geometry.ToString()} ");
+            }
+
+            Assert.True(response.IsValid);
+            Assert.Equal(2, response.AffectedFeatures.Count);
+
+            var editedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "8");
+
+            Assert.Equal(editedPoint[0], editedLine1.Geometry.Coordinates[0].X);
+            Assert.Equal(editedPoint[1], editedLine1.Geometry.Coordinates[0].Y);
         }
 
     }

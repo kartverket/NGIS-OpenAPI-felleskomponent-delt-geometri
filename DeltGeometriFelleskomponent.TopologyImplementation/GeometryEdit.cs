@@ -92,11 +92,16 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             lineFeature = ApplyChange(lineFeature, request.Edit);
 
             var coordinates = originalGeometry.Coordinates;
-            if (IsEdgePoint(request.Edit,coordinates))
+            
+
+            if (IsEdgePoint(request.Edit, coordinates))
             {
                 //This may be an edge point
-                
-                var connects = GetConnectingPoint(affectedFeatures, originalGeometry, index);
+            
+                //if the line is a single line making up a polygon, we have to consider the line itself for connecting points
+                var connects = IsSingleLineForPoint(request) 
+                    ? GetConnectingPoint(new List<NgisFeature>() { request.Feature }, originalGeometry, index) 
+                    : GetConnectingPoint(affectedFeatures, originalGeometry, index);
 
                 if (connects != null)
                 {
@@ -131,6 +136,17 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             }
             
             return new List<NgisFeature>() { lineFeature }.Concat(affectedFeatures).ToList();
+        }
+
+        private static bool IsSingleLineForPoint(EditLineRequest request)
+        {
+            if (request.AffectedFeatures.Count == 1 && request.AffectedFeatures[0].Geometry.GeometryType == "Polygon")
+            {
+                var references = NgisFeatureHelper.GetAllReferences(request.AffectedFeatures[0]);
+                return references.Count == 1 && references[0] == NgisFeatureHelper.GetLokalId(request.Feature);
+            }
+
+            return false;
         }
 
         private static bool IsEdgePoint(EditLineOperation edit, IReadOnlyCollection<Coordinate> coordinates)
