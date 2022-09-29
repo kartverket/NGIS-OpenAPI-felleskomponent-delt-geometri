@@ -97,11 +97,17 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             if (IsEdgePoint(request.Edit, coordinates))
             {
                 //This may be an edge point
-            
+
+                //in the case of an insert, the supplied index may be outside the existing geometry, so 
+                //we cannot use that to find connecting points
+                var exsistingIndex = request.Edit.Operation == EditOperation.Insert && index > coordinates.Length - 1 
+                    ? index - 1 
+                    : index;
+
                 //if the line is a single line making up a polygon, we have to consider the line itself for connecting points
                 var connects = IsSingleLineForPoint(request) 
-                    ? GetConnectingPoint(new List<NgisFeature>() { request.Feature }, originalGeometry, index) 
-                    : GetConnectingPoint(affectedFeatures, originalGeometry, index);
+                    ? GetConnectingPoint(new List<NgisFeature>() { request.Feature }, originalGeometry, exsistingIndex) 
+                    : GetConnectingPoint(affectedFeatures, originalGeometry, exsistingIndex);
 
                 if (connects != null)
                 {
