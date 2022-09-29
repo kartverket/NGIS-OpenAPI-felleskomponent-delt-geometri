@@ -597,7 +597,7 @@ namespace DeltGeometriFelleskomponent.Tests
             lineStringModified[1].Y += 20;
 
             var movedCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var editedFeature = GeometryEdit.EditObject(new EditLineRequest()
+            var edited = GeometryEdit.EditObject(new EditLineRequest()
             {
                 AffectedFeatures = affectedFeatures,
                 Feature = lineFeature1,
@@ -612,7 +612,7 @@ namespace DeltGeometriFelleskomponent.Tests
                 
 
             // 3. Return updated polygon.
-            var features = new List<NgisFeature>() { editedFeature, lineFeature2 };
+            var features = new List<NgisFeature>() { edited[0], lineFeature2 };
             var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
@@ -643,9 +643,9 @@ namespace DeltGeometriFelleskomponent.Tests
             lineStringModified[1].X += 10;
             lineStringModified[1].Y += 20;
             var insertCoordinateCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var editedFeature = GeometryEdit.EditObject(new EditLineRequest()
+            var edited = GeometryEdit.EditObject(new EditLineRequest()
             {
-                AffectedFeatures = affectedFeatures,
+                AffectedFeatures = new List<NgisFeature>(),
                 Feature = lineFeature1,
                 Edit = new EditLineOperation()
                 {
@@ -654,6 +654,7 @@ namespace DeltGeometriFelleskomponent.Tests
                     NodeValue = new List<double>() {insertCoordinateCoordinate.X, insertCoordinateCoordinate.Y }
                 }
             });
+            var editedFeature = edited[0];
             output.WriteLine("editedFeature: " + editedFeature.Geometry.ToString());
             
 
@@ -692,7 +693,7 @@ namespace DeltGeometriFelleskomponent.Tests
             //lineStringModified[1].X += 10;
             //lineStringModified[1].Y += 20;
             //var insertCoordinateCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var editedFeature = GeometryEdit.EditObject(new EditLineRequest()
+            var edited = GeometryEdit.EditObject(new EditLineRequest()
             {
                 AffectedFeatures = affectedFeatures,
                 Feature = lineFeature1,
@@ -705,7 +706,7 @@ namespace DeltGeometriFelleskomponent.Tests
             
             var coordinateCount2 = lineFeature1.Geometry.Coordinates.Length;
             // 3. Return updated polygon.
-            var features = new List<NgisFeature>() { editedFeature, lineFeature2 };
+            var features = new List<NgisFeature>() { edited[0], lineFeature2 };
             var res = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
             {
                 Features = features,
@@ -756,6 +757,173 @@ namespace DeltGeometriFelleskomponent.Tests
 
             
         }
+
+        [Fact]
+        public void HandlesEditOfConnectingNodeInLineUsedByAPolygon()
+        {
+            var line1 = GetExampleFeature("1");
+            var line2 = GetExampleFeature("2");
+            var polygonFeature = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+                { Features = new List<NgisFeature>() { line1, line2 } }).First().AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+
+            var point = line1.Geometry.Coordinates[0];
+            var editedPoint = new List<double>() { point.X + 0.001, point.Y + 0.001 };
+
+            var request = new EditLineRequest()
+            {
+                Feature = line1,
+                Edit = new EditLineOperation()
+                {
+                    NodeIndex = 0,
+                    NodeValue = editedPoint,
+                    Operation = EditOperation.Edit
+                },
+                AffectedFeatures = new List<NgisFeature>() { line2, NgisFeatureHelper.Copy(polygonFeature!) }
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+
+            foreach (var affectedFeature in response.AffectedFeatures)
+            {
+                output.WriteLine($"affected: {NgisFeatureHelper.GetLokalId(affectedFeature)} : {affectedFeature.Geometry.ToString()} " );
+            }
+
+            Assert.True(response.IsValid);
+            Assert.Equal(3, response.AffectedFeatures.Count);
+     
+            var editedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1");
+            
+            Assert.Equal(editedPoint[0], editedLine1.Geometry.Coordinates[0].X);
+            Assert.Equal(editedPoint[1], editedLine1.Geometry.Coordinates[0].Y);
+        }
+
+        [Fact]
+        public void HandlesInsertOfNewConnectingNodeInLineUsedByAPolygon()
+        {
+            var line1 = GetExampleFeature("1");
+            var line2 = GetExampleFeature("2");
+            var polygonFeature = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+                { Features = new List<NgisFeature>() { line1, line2 } }).First().AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+
+            var point = line1.Geometry.Coordinates[0];
+            var editedPoint = new List<double>() { point.X - 0.001, point.Y + 0.001 };
+
+            var request = new EditLineRequest()
+            {
+                Feature = NgisFeatureHelper.Copy(line1),
+                Edit = new EditLineOperation()
+                {
+                    NodeIndex = 0,
+                    NodeValue = editedPoint,
+                    Operation = EditOperation.Insert
+                },
+                AffectedFeatures = new List<NgisFeature>() { line2, NgisFeatureHelper.Copy(polygonFeature!) }
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+
+            foreach (var affectedFeature in response.AffectedFeatures)
+            {
+                output.WriteLine($"affected: {NgisFeatureHelper.GetLokalId(affectedFeature)} : {affectedFeature.Geometry.ToString()} ");
+            }
+
+            Assert.True(response.IsValid);
+            Assert.Equal(3, response.AffectedFeatures.Count);
+
+            // var editedPolygonFeature = response.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon")!;
+
+
+            var editedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1");
+
+            Assert.Equal(line1.Geometry.Coordinates.Length + 1, editedLine1.Geometry.Coordinates.Length);
+            Assert.Equal(editedPoint[0], editedLine1.Geometry.Coordinates[0].X);
+            Assert.Equal(editedPoint[1], editedLine1.Geometry.Coordinates[0].Y);
+        }
+
+        [Fact]
+        public void HandlesDeleteOfConnectingNodeInLineUsedByAPolygon()
+        {
+            var line1 = GetExampleFeature("1");
+            var line2 = GetExampleFeature("2");
+            var polygonFeature = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+            { Features = new List<NgisFeature>() { line1, line2 } }).First().AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+
+            var point = line1.Geometry.Coordinates[0];
+            var editedPoint = new List<double>() { point.X - 0.001, point.Y + 0.001 };
+
+            var request = new EditLineRequest()
+            {
+                Feature = NgisFeatureHelper.Copy(line1),
+                Edit = new EditLineOperation()
+                {
+                    NodeIndex = 0,
+                    Operation = EditOperation.Delete
+                },
+                AffectedFeatures = new List<NgisFeature>() { line2, NgisFeatureHelper.Copy(polygonFeature!) }
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+
+            foreach (var affectedFeature in response.AffectedFeatures)
+            {
+                output.WriteLine($"affected: {NgisFeatureHelper.GetLokalId(affectedFeature)} : {affectedFeature.Geometry.ToString()} ");
+            }
+
+            Assert.True(response.IsValid);
+            Assert.Equal(3, response.AffectedFeatures.Count);
+            
+
+            var editedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1");
+            var editedLine2 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "2");
+
+            Assert.Equal(line1.Geometry.Coordinates.Length - 1, editedLine1.Geometry.Coordinates.Length);
+            Assert.Equal(line1.Geometry.Coordinates[1].X, editedLine1.Geometry.Coordinates[0].X);
+            Assert.Equal(line1.Geometry.Coordinates[1].Y, editedLine1.Geometry.Coordinates[0].Y);
+
+            Assert.Equal(line1.Geometry.Coordinates[1].X, editedLine2.Geometry.Coordinates[0].X);
+            Assert.Equal(line1.Geometry.Coordinates[1].Y, editedLine2.Geometry.Coordinates[0].Y);
+        }
+
+
+        [Fact]
+        public void HandlesEditOfConnectingNodeInLineUsedByAPolygonThatUsesSingleLine()
+        {
+            var line1 = GetExampleFeature("8");
+            
+            var polygonFeature = _topologyImplementation.CreatePolygonsFromLines(new CreatePolygonFromLinesRequest()
+                { Features = new List<NgisFeature>() { line1 } }).First().AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+
+            var point = line1.Geometry.Coordinates[0];
+            var editedPoint = new List<double>() { point.X + 0.001, point.Y + 0.001 };
+
+            var request = new EditLineRequest()
+            {
+                Feature = line1,
+                Edit = new EditLineOperation()
+                {
+                    NodeIndex = 0,
+                    NodeValue = editedPoint,
+                    Operation = EditOperation.Edit
+                },
+                AffectedFeatures = new List<NgisFeature>() {NgisFeatureHelper.Copy(polygonFeature!) }
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+
+            foreach (var affectedFeature in response.AffectedFeatures)
+            {
+                output.WriteLine($"affected: {NgisFeatureHelper.GetLokalId(affectedFeature)} : {affectedFeature.Geometry.ToString()} ");
+            }
+
+            Assert.True(response.IsValid);
+            Assert.Equal(2, response.AffectedFeatures.Count);
+
+            var editedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "8");
+
+            Assert.Equal(editedPoint[0], editedLine1.Geometry.Coordinates[0].X);
+            Assert.Equal(editedPoint[1], editedLine1.Geometry.Coordinates[0].Y);
+        }
+
     }
 }
 

@@ -39,7 +39,7 @@ public class GeometryEditTest : TestBase
                 NodeIndex = 1,
                 Operation = EditOperation.Delete
             }
-        });
+        })[0];
         output.WriteLine("editedFeature: " + res.Geometry);
         Assert.Equal(2, res.Geometry.Coordinates.Length);
         Assert.Equal(LineFeature.Geometry.Coordinates[2].X, res.Geometry.Coordinates[1].X);
@@ -59,7 +59,7 @@ public class GeometryEditTest : TestBase
                 Operation = EditOperation.Insert,
                 NodeValue = new List<double>() { 100, 100 }
             }
-        });
+        })[0];
         output.WriteLine("editedFeature: " + res.Geometry);
         Assert.Equal(4, res.Geometry.Coordinates.Length);
         Assert.Equal(100, res.Geometry.Coordinates[0].X);
@@ -79,7 +79,7 @@ public class GeometryEditTest : TestBase
                 Operation = EditOperation.Insert,
                 NodeValue = new List<double>(){100, 100}
             }
-        });
+        })[0];
         output.WriteLine("editedFeature: " + res.Geometry);
         Assert.Equal(4, res.Geometry.Coordinates.Length);
         Assert.Equal(LineFeature.Geometry.Coordinates[0].X, res.Geometry.Coordinates[0].X);
@@ -100,7 +100,7 @@ public class GeometryEditTest : TestBase
                 Operation = EditOperation.Insert,
                 NodeValue = new List<double>() { 100, 100 }
             }
-        });
+        })[0];
         output.WriteLine("editedFeature: " + res.Geometry);
         Assert.Equal(4, res.Geometry.Coordinates.Length);
         Assert.Equal(LineFeature.Geometry.Coordinates[0].X, res.Geometry.Coordinates[0].X);
@@ -122,7 +122,7 @@ public class GeometryEditTest : TestBase
                 Operation = EditOperation.Insert,
                 NodeValue = new List<double>() { 100, 100 }
             }
-        });
+        })[0];
         output.WriteLine("editedFeature: " + res.Geometry);
         Assert.Equal(4, res.Geometry.Coordinates.Length);
         Assert.Equal(LineFeature.Geometry.Coordinates[0].X, res.Geometry.Coordinates[0].X);
