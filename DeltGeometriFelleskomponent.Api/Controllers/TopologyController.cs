@@ -17,7 +17,8 @@ namespace DeltGeometriFelleskomponent.Api.Controllers
             _topologyImplementation = topologyImplementation;
         }
 
-        /// Transform the geometry into something that NgisApi will accept
+        /// <summary>
+        /// Create a geometry (or several) that can be saved to NgisOpenApi provided a simple feature
         /// </summary>
         /// <remarks>
         /// Examples creating geometries:
@@ -113,7 +114,7 @@ namespace DeltGeometriFelleskomponent.Api.Controllers
             => _topologyImplementation.CreateGeometry(request);
 
         /// <summary>
-        /// Create a polygon feature given a set of line features and an optional centroid
+        /// Create polygon features given a set of line features and  optional centroids
         /// </summary>
         /// <remarks>
         /// Sample request 1 (Creating Polygon from Lines):
@@ -180,64 +181,46 @@ namespace DeltGeometriFelleskomponent.Api.Controllers
 
 
         /// <summary>
-        /// Edit a linestring
+        /// Edit a linestring. Supply all affected features
         /// </summary>
         /// <remarks>
         /// Sample request 1 (edit node on line):
         ///
         ///     {
-        ///         "features": [
-        ///             {
-        ///                 "type": "Feature",
-        ///                 "properties": {
-        ///                     "identifikasjon": {
-        ///                         "lokalId": "1"
-        ///                     }
-        ///                 },
-        ///                 "geometry": {
-        ///                     "type": "LineString",
-        ///                     "coordinates": [
-        ///                         [
-        ///                             10.395126342773438,
-        ///                             63.426521799701455
-        ///                         ],
-        ///                         [
-        ///                             10.396928787231444,
-        ///                             63.42650260172424
-        ///                         ],
-        ///                         [
-        ///                             10.396901965141296,
-        ///                             63.425749070960116
-        ///                         ]
-        ///                     ]
+        ///         "feature": {
+        ///             "type": "Feature",
+        ///             "properties": {
+        ///                 "identifikasjon": {
+        ///                     "lokalId": "1"
         ///                 }
         ///             },
-        ///             {
-        ///                 "type": "Feature",
-        ///                 "properties": {
-        ///                     "identifikasjon": {
-        ///                         "lokalId": "2"
-        ///                     }
-        ///                 },
-        ///                 "geometry": {
-        ///                     "type": "LineString",
-        ///                     "coordinates": [
-        ///                         [
-        ///                             10.395126342773438,
-        ///                             63.426521799701455
-        ///                         ],
-        ///                         [
-        ///                             10.395013689994812,
-        ///                             63.42564587889909
-        ///                         ],
-        ///                         [
-        ///                             10.396901965141296,
-        ///                             63.425749070960116
-        ///                         ]
+        ///             "geometry": {
+        ///                 "type": "LineString",
+        ///                 "coordinates": [
+        ///                     [
+        ///                         10.395126342773438,
+        ///                         63.426521799701455
+        ///                     ],
+        ///                     [
+        ///                         10.396928787231444,
+        ///                         63.42650260172424
+        ///                     ],
+        ///                     [
+        ///                         10.396901965141296,
+        ///                         63.425749070960116
         ///                     ]
-        ///                 }
+        ///                 ]
         ///             }
-        ///         ]
+        ///         },
+        ///         "edit": {
+        ///             "operation": "Edit",
+        ///             "nodeIndex": 1,
+        ///             "nodeValue": [
+        ///                 11.1,
+        ///                 64.1
+        ///             ]
+        ///         },
+        ///         "affectedFeatures": []
         ///     }
         /// 
         /// Sample request 2 (insert node on line):
@@ -279,7 +262,7 @@ namespace DeltGeometriFelleskomponent.Api.Controllers
         ///         "affectedFeatures": []
         ///     }
         /// 
-        /// Sample request 2 (insert node on line):
+        /// Sample request 2 (delete node on line):
         ///
         ///     {
         ///         "feature": {
