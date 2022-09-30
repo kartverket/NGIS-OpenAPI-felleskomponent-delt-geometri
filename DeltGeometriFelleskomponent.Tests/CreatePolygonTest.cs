@@ -3,6 +3,7 @@ using System.Text.Json;
 using DeltGeometriFelleskomponent.Api.Util;
 using DeltGeometriFelleskomponent.Models;
 using DeltGeometriFelleskomponent.TopologyImplementation;
+using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO.Converters;
 using Newtonsoft.Json;
@@ -96,6 +97,22 @@ public class CreatePolygonTest: TestBase
         Assert.Null(linestring1.Geometry_Properties);
         Assert.Null(linestring2.Geometry_Properties);
     }
+
+    [Fact]
+    public void AddsReferencesInCorrectOrder()
+    {
+        var request = ReadCreatePolygonFromLinesRequest("Examples/polygon_from_lines_input.json");
+
+        var result = _topologyImplementation.CreatePolygonsFromLines(request);
+
+        var polygon = result.FirstOrDefault().AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+
+
+        Assert.NotNull(polygon);
+
+    }
+
+
     [Fact]
     public void PolygonSerializationHandlesRingWinding()
     {

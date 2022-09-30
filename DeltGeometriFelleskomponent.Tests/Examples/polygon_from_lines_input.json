@@ -1,0 +1,102 @@
+﻿{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.954441999999998,
+            60.82933100000001
+          ],
+          [
+            10.970062999999998,
+            60.829184
+          ]
+        ]
+      },
+      "properties": {
+        "featuretype": "TiltakGrense",
+        "kvalitet": {
+          "målemetode": "45",
+          "nøyaktighet": 1
+        },
+        "identifikasjon": {
+          "lokalId": "90bad013-f611-46f5-bb59-d60eb9552d0e",
+          "navnerom": "http://data.geonorge.no/SFKB/FKB-Tiltak/so",
+          "versjonId": "2022-09-29 18:08:14.294345000"
+        },
+        "oppdateringsdato": "2022-09-29T18:08:14"
+      },
+      "datasetId": "8813a718-23ec-4845-b191-67048ca4bff7",
+      "selected": false
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.970062999999998,
+            60.829184
+          ],
+          [
+            10.968903999999998,
+            60.823348
+          ],
+          [
+            10.95367,
+            60.82385
+          ]
+        ]
+      },
+      "properties": {
+        "featuretype": "TiltakGrense",
+        "kvalitet": {
+          "målemetode": "45",
+          "nøyaktighet": 1
+        },
+        "identifikasjon": {
+          "lokalId": "91bf85e6-1909-4c36-937d-a95a046189ef",
+          "navnerom": "http://data.geonorge.no/SFKB/FKB-Tiltak/so",
+          "versjonId": "2022-09-29 18:08:14.294345000"
+        },
+        "oppdateringsdato": "2022-09-29T18:08:14"
+      },
+      "datasetId": "8813a718-23ec-4845-b191-67048ca4bff7",
+      "selected": false
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.954441999999998,
+            60.82933100000001
+          ],
+          [
+            10.95367,
+            60.82385
+          ]
+        ]
+      },
+      "properties": {
+        "featuretype": "TiltakGrense",
+        "kvalitet": {
+          "målemetode": "45",
+          "nøyaktighet": 1
+        },
+        "identifikasjon": {
+          "lokalId": "e8669bf0-430b-4a3b-b903-eed024453116",
+          "navnerom": "http://data.geonorge.no/SFKB/FKB-Tiltak/so",
+          "versjonId": "2022-09-29 18:08:14.294345000"
+        },
+        "oppdateringsdato": "2022-09-29T18:08:14"
+      },
+      "datasetId": "8813a718-23ec-4845-b191-67048ca4bff7",
+      "selected": false
+    }
+  ]
+}
