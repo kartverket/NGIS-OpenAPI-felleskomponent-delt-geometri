@@ -110,6 +110,12 @@ public class CreatePolygonTest: TestBase
 
         Assert.NotNull(polygon);
 
+        var references = polygon.Geometry_Properties.Exterior;
+
+        Assert.Equal("e8669bf0-430b-4a3b-b903-eed024453116", references[0]);
+        Assert.Equal("-91bf85e6-1909-4c36-937d-a95a046189ef", references[1]);
+        Assert.Equal("-90bad013-f611-46f5-bb59-d60eb9552d0e", references[2]);
+
     }
 
 

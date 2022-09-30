@@ -29,9 +29,10 @@ public class CreatePolygonFromLinesTest: TestBase
         var polygon = result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
         var exteriors = polygon!.Geometry_Properties!.Exterior!;
         Assert.Equal(2, exteriors.Count);
+
+        Assert.Equal("2", exteriors[0]);
+        Assert.Equal("-1", exteriors[1]);
         
-        Assert.Equal("-1", exteriors[0]);
-        Assert.Equal("2", exteriors[1]);
 
         Assert.Empty( polygon!.Geometry_Properties!.Interiors!);
     }

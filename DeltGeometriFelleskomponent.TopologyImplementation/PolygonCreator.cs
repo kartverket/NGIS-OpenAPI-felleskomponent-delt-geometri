@@ -76,7 +76,7 @@ public class PolygonCreator
 
             if (orderedPolygon != null)
             {
-                var exteriorReferences = GetOrientedFeatures(orderedPolygon.ExteriorRing, lineFeatures).ToList();
+                var exteriorReferences = GetOrientedFeatures(orderedPolygon.ExteriorRing, lineFeatures).Reverse().ToList();
                 referencesExterior = exteriorReferences.Select(p => p.Feature).ToList();
 
                 var interiorReferences = orderedPolygon.InteriorRings.Select(hole => GetOrientedFeatures(hole, lineFeatures).ToList()).ToList();
