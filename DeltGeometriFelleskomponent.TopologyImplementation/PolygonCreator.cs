@@ -91,8 +91,6 @@ public class PolygonCreator
             }
             NgisFeatureHelper.SetOperation(polygonFeature, Operation.Create);
 
-            lineFeatures.ForEach(a => NgisFeatureHelper.SetReferences(a, new List<string>() { lokalId }, null));
-
             //CreatePolygonFromLines now return NgisFeature FeatureReferences for lines in addition to the new polygon
             var affectedExteriors = referencesExterior.ToList().ToList();
             var affectedInteriors = referencesInteriors.SelectMany(listNgisInterior => listNgisInterior).ToList();
