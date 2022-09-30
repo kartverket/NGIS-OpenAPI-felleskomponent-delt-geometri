@@ -131,9 +131,12 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal("Polygon", feature2.Geometry!.GeometryType);
             Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature2));
 
-            //var references = NgisFeatureHelper.GetExteriors(feature1);
-            //Assert.Single(references);
-            //Assert.Equal(references.First(), NgisFeatureHelper.GetLokalId(feature2));
+
+            /* TODO: Find another way to assert this
+            var references = NgisFeatureHelper.GetExteriors(feature1);
+            Assert.Single(references);
+            Assert.Equal(references.First(), NgisFeatureHelper.GetLokalId(feature2));
+            */
         }
 
         [Fact]
@@ -266,13 +269,16 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature1));
 
 
+            /* TODO: find another way to assert this
             var feature1References = NgisFeatureHelper.GetExteriors(feature1);
             //Assert.Single(feature1References);
             //Assert.Equal(feature1References.First(), NgisFeatureHelper.GetLokalId(featurePolygon));
 
             var feature2References = NgisFeatureHelper.GetExteriors(feature2);
-            //Assert.Single(feature2References);
-            //Assert.Equal(feature2References.First(), NgisFeatureHelper.GetLokalId(featurePolygon));
+
+            Assert.Single(feature2References);
+            Assert.Equal(feature2References.First(), NgisFeatureHelper.GetLokalId(featurePolygon));
+            */
 
 
             var feature3References = NgisFeatureHelper.GetExteriors(featurePolygon);
@@ -549,11 +555,12 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal("Polygon", featurePolygon.Geometry!.GeometryType);
             Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(featurePolygon));
 
-            /*
+            /* TODO: Find another way to assert this
+
             var feature1References = NgisFeatureHelper.GetExteriors(feature1);
             Assert.Single(feature1References);
             Assert.Equal(feature1References.First(), NgisFeatureHelper.GetLokalId(featurePolygon));
-
+            
             var feature2References = NgisFeatureHelper.GetExteriors(feature1);
             Assert.Single(feature2References);
             Assert.Equal(feature2References.First(), NgisFeatureHelper.GetLokalId(featurePolygon));
