@@ -1,4 +1,6 @@
-﻿using DeltGeometriFelleskomponent.Models;
+﻿using System.Linq;
+using DeltGeometriFelleskomponent.Models;
+using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
 
 
@@ -82,8 +84,54 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             };
         }
 
+        private static void SetEditOperation(EditLineRequest request)
+        {
+            if (request.NewFeature == null) return;
+
+            request.Edit.NodeIndex = -1;
+            
+            SetDifference(request);
+        }
+
+        private static void SetDifference(EditLineRequest request)
+        {            
+            switch (request.Edit.Operation)
+            {
+                case (EditOperation.Insert):
+                case (EditOperation.Edit):
+                    {
+                        var newCoordinate = request.NewFeature!.Geometry.Coordinates.Except(request.Feature.Geometry.Coordinates).First();
+
+                        request.Edit.NodeValue = new List<double> { newCoordinate.X, newCoordinate.Y };
+
+                        request.Edit.NodeIndex = request.NewFeature.Geometry.Coordinates.ToList().IndexOf(newCoordinate);
+
+                        break;
+                    }
+                case (EditOperation.Delete):
+                    {
+                        // Should work, but won't :(
+                        //return request.Feature.Geometry.Difference(request.NewFeature!.Geometry);
+
+                        var missingOrMovedCoordinate = request.Feature.Geometry.Coordinates.Except(request.NewFeature!.Geometry.Coordinates).First();
+
+                        request.Edit.NodeValue = new List<double> { missingOrMovedCoordinate.X, missingOrMovedCoordinate.Y };
+
+                        request.Edit.NodeIndex = request.Feature.Geometry.Coordinates.ToList().IndexOf(missingOrMovedCoordinate);
+
+                        break;
+                    }
+                default:
+                    {
+                        throw new Exception("Operation not supported");
+                    }
+            }
+        }
+
         public static List<NgisFeature> EditObject(EditLineRequest request)
         {
+            SetEditOperation(request);
+
             var affectedFeatures = request.AffectedFeatures;
             var lineFeature = request.Feature;
             var index = request.Edit.NodeIndex;
