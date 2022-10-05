@@ -84,17 +84,45 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             };
         }
 
-        private static void SetEditOperation(EditLineRequest request)
+        private static void SetEditOperationAndNodeInfo(EditLineRequest request)
         {
-            if (request.NewFeature == null) return;
+            if (request.NewFeature == null) {
+                if (request.Edit == null) throw new Exception("Edit operation required if NewFeature not set.");
+                return;
+            }
 
-            request.Edit.NodeIndex = -1;
+            if(request.Edit != null)
+            {
+                SetDifference(request);
+
+                return;
+            }
+
+            var newCoordinates = request.NewFeature!.Geometry.Coordinates.Except(request.Feature.Geometry.Coordinates).ToList();
             
-            SetDifference(request);
+            var missingOrMovedCoordinates = request.Feature.Geometry.Coordinates.Except(request.NewFeature!.Geometry.Coordinates).ToList();
+
+            request.Edit = new EditLineOperation();
+
+            if (newCoordinates.Count > 1 || missingOrMovedCoordinates.Count > 1) throw new NotImplementedException("Multi-node edits not implemented.");
+
+            if (newCoordinates.Any()) {
+                request.Edit.Operation = missingOrMovedCoordinates.Any() 
+                     ? EditOperation.Edit
+                     : EditOperation.Insert;
+
+                SetNodeInfo(request.Edit, newCoordinates.First(), request.NewFeature);
+            }
+            else if (missingOrMovedCoordinates.Any()) {
+                request.Edit.Operation = EditOperation.Delete;
+
+                SetNodeInfo(request.Edit, missingOrMovedCoordinates.First(), request.Feature);
+            }
+            else throw new Exception("No difference detected between geometries");
         }
 
         private static void SetDifference(EditLineRequest request)
-        {            
+        {
             switch (request.Edit.Operation)
             {
                 case (EditOperation.Insert):
@@ -128,13 +156,20 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             }
         }
 
+        private static void SetNodeInfo(EditLineOperation edit, Coordinate coordinate, NgisFeature feature)
+        {
+            edit.NodeValue = new List<double> { coordinate.X, coordinate.Y };
+
+            edit.NodeIndex = feature.Geometry.Coordinates.ToList().IndexOf(coordinate);
+        }
+
         public static List<NgisFeature> EditObject(EditLineRequest request)
         {
-            SetEditOperation(request);
+            SetEditOperationAndNodeInfo(request);
 
-            var affectedFeatures = request.AffectedFeatures;
+            var affectedFeatures = request.AffectedFeatures ?? new List<NgisFeature>();
             var lineFeature = request.Feature;
-            var index = request.Edit.NodeIndex;
+            var index = request.Edit!.NodeIndex;
 
             var originalGeometry = (LineString)lineFeature.Geometry.Copy();
             lineFeature = ApplyChange(lineFeature, request.Edit);
@@ -194,7 +229,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
 
         private static bool IsSingleLineForPoint(EditLineRequest request)
         {
-            if (request.AffectedFeatures.Count == 1 && request.AffectedFeatures[0].Geometry.GeometryType == "Polygon")
+            if (request.AffectedFeatures?.Count == 1 && request.AffectedFeatures[0].Geometry.GeometryType == "Polygon")
             {
                 var references = NgisFeatureHelper.GetAllReferences(request.AffectedFeatures[0]);
                 return references.Count == 1 && references[0] == NgisFeatureHelper.GetLokalId(request.Feature);

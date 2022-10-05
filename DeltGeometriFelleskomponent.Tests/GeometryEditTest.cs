@@ -321,4 +321,98 @@ public class GeometryEditTest : TestBase
         Assert.Equal(100, res.Geometry.Coordinates[2].X);
         
     }
+
+
+    [Fact]
+    public void DeletesNodeOnLineWithWithNewFeatureSansEdit()
+    {
+        var res = GeometryEdit.EditObject(new EditLineRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(LineFeature),
+            NewFeature = NgisFeatureHelper.Copy(LineFeatureSans1)
+        })[0];
+        output.WriteLine("editedFeature: " + res.Geometry);
+        Assert.Equal(2, res.Geometry.Coordinates.Length);
+        Assert.Equal(LineFeatureSans1.Geometry.Coordinates[1].X, res.Geometry.Coordinates[1].X);
+    }
+
+
+    [Fact]
+    public void InsertsNodeOnLineIndex0WithNewFeatureSansEdit()
+    {
+        var res = GeometryEdit.EditObject(new EditLineRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(LineFeature),
+            NewFeature = NgisFeatureHelper.Copy(LineFeatureNew0)
+        })[0];
+        output.WriteLine("editedFeature: " + res.Geometry);
+        Assert.Equal(4, res.Geometry.Coordinates.Length);
+        Assert.Equal(100, res.Geometry.Coordinates[0].X);
+        Assert.Equal(LineFeatureNew0.Geometry.Coordinates[3].X, res.Geometry.Coordinates[3].X);
+    }
+
+    [Fact]
+    public void InsertsNodeOnLineIndex1WithNewFeatureSansEdit()
+    {
+        var res = GeometryEdit.EditObject(new EditLineRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(LineFeature),
+            NewFeature = NgisFeatureHelper.Copy(LineFeatureNew1)
+        })[0];
+        output.WriteLine("editedFeature: " + res.Geometry);
+        Assert.Equal(4, res.Geometry.Coordinates.Length);
+        Assert.Equal(LineFeatureNew1.Geometry.Coordinates[0].X, res.Geometry.Coordinates[0].X);
+        Assert.Equal(100, res.Geometry.Coordinates[1].X);
+        Assert.Equal(LineFeatureNew1.Geometry.Coordinates[2].X, res.Geometry.Coordinates[2].X);
+        Assert.Equal(LineFeatureNew1.Geometry.Coordinates[3].X, res.Geometry.Coordinates[3].X);
+    }
+
+    [Fact]
+    public void InsertsNodeOnLineIndex2WithOldFeatureSansEdit()
+    {
+        var res = GeometryEdit.EditObject(new EditLineRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(LineFeature),
+            NewFeature = NgisFeatureHelper.Copy(LineFeatureNew2),
+        })[0];
+        output.WriteLine("editedFeature: " + res.Geometry);
+        Assert.Equal(4, res.Geometry.Coordinates.Length);
+        Assert.Equal(LineFeatureNew2.Geometry.Coordinates[0].X, res.Geometry.Coordinates[0].X);
+        Assert.Equal(LineFeatureNew2.Geometry.Coordinates[1].X, res.Geometry.Coordinates[1].X);
+        Assert.Equal(100, res.Geometry.Coordinates[2].X);
+
+        Assert.Equal(LineFeatureNew2.Geometry.Coordinates[3].X, res.Geometry.Coordinates[3].X);
+    }
+
+    [Fact]
+    public void InsertsNodeOnLineIndex3WithOldFeatureSansEdit()
+    {
+        var res = GeometryEdit.EditObject(new EditLineRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(LineFeature),
+            NewFeature = NgisFeatureHelper.Copy(LineFeatureNew3)
+        })[0];
+        output.WriteLine("editedFeature: " + res.Geometry);
+        Assert.Equal(4, res.Geometry.Coordinates.Length);
+        Assert.Equal(LineFeatureNew3.Geometry.Coordinates[0].X, res.Geometry.Coordinates[0].X);
+        Assert.Equal(LineFeatureNew3.Geometry.Coordinates[1].X, res.Geometry.Coordinates[1].X);
+        Assert.Equal(LineFeatureNew3.Geometry.Coordinates[2].X, res.Geometry.Coordinates[2].X);
+        Assert.Equal(100, res.Geometry.Coordinates[3].X);
+    }
+
+    [Fact]
+    public void MovesNodeOnLineIndex2WithOldFeatureSansEdit()
+    {
+        var res = GeometryEdit.EditObject(new EditLineRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(LineFeature),
+            NewFeature = NgisFeatureHelper.Copy(LineFeatureMoved2)
+        })[0];
+        output.WriteLine("editedFeature: " + res.Geometry);
+        Assert.Equal(3, res.Geometry.Coordinates.Length);
+        Assert.Equal(LineFeatureMoved2.Geometry.Coordinates[0].X, res.Geometry.Coordinates[0].X);
+        Assert.Equal(LineFeatureMoved2.Geometry.Coordinates[1].X, res.Geometry.Coordinates[1].X);
+        Assert.Equal(100, res.Geometry.Coordinates[2].X);
+
+    }
 }
