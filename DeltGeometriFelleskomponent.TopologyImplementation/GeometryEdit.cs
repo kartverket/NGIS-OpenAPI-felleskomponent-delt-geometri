@@ -125,27 +125,23 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
         {
             switch (request.Edit!.Operation)
             {
-                case (EditOperation.Insert):
-                case (EditOperation.Edit):
+                case EditOperation.Insert:
+                case EditOperation.Edit:
                     {
                         var newCoordinate = request.NewFeature!.Geometry.Coordinates.Except(request.Feature.Geometry.Coordinates).First();
 
-                        request.Edit.NodeValue = new List<double> { newCoordinate.X, newCoordinate.Y };
-
-                        request.Edit.NodeIndex = request.NewFeature.Geometry.Coordinates.ToList().IndexOf(newCoordinate);
+                        SetNodeInfo(request.Edit, newCoordinate, request.NewFeature);
 
                         break;
                     }
-                case (EditOperation.Delete):
+                case EditOperation.Delete:
                     {
                         // Should work, but won't :(
                         //return request.Feature.Geometry.Difference(request.NewFeature!.Geometry);
 
                         var missingOrMovedCoordinate = request.Feature.Geometry.Coordinates.Except(request.NewFeature!.Geometry.Coordinates).First();
 
-                        request.Edit.NodeValue = new List<double> { missingOrMovedCoordinate.X, missingOrMovedCoordinate.Y };
-
-                        request.Edit.NodeIndex = request.Feature.Geometry.Coordinates.ToList().IndexOf(missingOrMovedCoordinate);
+                        SetNodeInfo(request.Edit, missingOrMovedCoordinate, request.Feature);
 
                         break;
                     }
