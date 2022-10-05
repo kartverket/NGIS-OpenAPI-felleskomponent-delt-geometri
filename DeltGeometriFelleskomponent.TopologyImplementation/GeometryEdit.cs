@@ -123,7 +123,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
 
         private static void SetDifference(EditLineRequest request)
         {
-            switch (request.Edit.Operation)
+            switch (request.Edit!.Operation)
             {
                 case (EditOperation.Insert):
                 case (EditOperation.Edit):
@@ -259,6 +259,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
                 EditOperation.Edit => ReplaceNode(existingGeometry, edit.NodeIndex, edit.NodeCoordinate),
                 EditOperation.Delete => DeletePoint(existingGeometry, edit.NodeIndex),
                 EditOperation.Insert => InsertPoint(existingGeometry, edit.NodeIndex, edit.NodeCoordinate),
+                _ => throw new NotImplementedException(),
             };
             return lineFeature;
         }
