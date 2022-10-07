@@ -813,7 +813,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
 
         [Fact]
-        public void DoesNotReturnLinesUnrelatedToChangeInAffectedFeatures()
+        public void DoesNotReturnLinesUnrelatedToChangeInAffectedFeaturesWhenEditingNonNodePoint()
         {
             var features = ReadFeatures("Examples/example_ngisfeatures_edit.geojson");
 
@@ -826,7 +826,6 @@ namespace DeltGeometriFelleskomponent.Tests
                 NodeValue = new List<double>() { 10.981049537658693, 60.82098367777078 },
                 Operation = EditOperation.Edit
             };
-
 
             var request = new EditLineRequest()
             {
@@ -847,6 +846,42 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedLine1));
             Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(affectedPolygon));
             Assert.Null(NgisFeatureHelper.GetOperation(affectedLine));
+        }
+
+        [Fact]
+        public void HandlesEditOfNodePointConnectingThreeLinesAndTwoPolygons()
+        {
+            var features = ReadFeatures("Examples/example_ngisfeatures_edit.geojson");
+
+            var line1 = features.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1c854251-4a5c-45f3-b21f-efb905299649")!;
+            var affected = features.Where(f => NgisFeatureHelper.GetLokalId(f) != "1c854251-4a5c-45f3-b21f-efb905299649")!;
+
+            var edit = new EditLineOperation()
+            {
+                NodeIndex = 3,
+                NodeValue = new List<double>() { 10.982551574707031, 60.81545954370719 },
+                Operation = EditOperation.Edit
+            };
+
+            var request = new EditLineRequest()
+            {
+                Feature = NgisFeatureHelper.Copy(line1),
+                Edit = edit,
+                AffectedFeatures = affected.Select(NgisFeatureHelper.Copy).ToList()
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+
+            Assert.True(response.IsValid);
+            Assert.Equal(5, response.AffectedFeatures.Count);
+
+            var editedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1c854251-4a5c-45f3-b21f-efb905299649")!;
+            var affectedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "02999bcc-fe82-4ce6-8a2e-6f01aeac0b8a")!;
+            var affectedPolygon1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "f946043d-2c4b-4278-b1ac-6eb8073daac1")!;
+
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedLine1));
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(affectedPolygon1));
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(affectedLine1));
         }
 
 
