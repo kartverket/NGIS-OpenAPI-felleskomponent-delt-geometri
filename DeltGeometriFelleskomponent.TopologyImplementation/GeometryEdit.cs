@@ -16,14 +16,18 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             }
 
             //apply the edit, get back all features directly affected
-            var editedLines = EditObject(request);
-            if (editedLines.Count == 0)
-            {
-                return new TopologyResponse()
+
+            var editedLines = new List<NgisFeature>();
+            try { 
+                 editedLines = EditObject(request);
+                if (editedLines.Count == 0 || editedLines.Any(f => !f.Geometry.IsValid))
                 {
-                    AffectedFeatures = new List<NgisFeature>() { },
-                    IsValid = false
-                };
+                    return EmptyInvalidResponse();
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                return EmptyInvalidResponse();
             }
 
             var affectedIds = editedLines.Select(NgisFeatureHelper.GetLokalId).Distinct();
@@ -54,20 +58,15 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             var editedPolygons = affectedPolygons.Select(p => RecreatePolygon(p, GetReferencedFeatures(p, affectedLines)));
 
             var isValid = editedPolygons.All(p => p != null);
-            if (!isValid)
-            {
-                return new TopologyResponse()
-                {
-                    AffectedFeatures = new List<NgisFeature>(),
-                    IsValid = false
-                };
-            }
 
-            return new TopologyResponse()
-            {
-                AffectedFeatures = affectedLines.Concat(editedPolygons).ToList()!,
-                IsValid = true
-            };
+            return isValid 
+                ? new TopologyResponse()
+                {
+                    AffectedFeatures = affectedLines.Concat(editedPolygons).ToList()!,
+                    IsValid = true
+                }
+                : EmptyInvalidResponse();
+
         }
 
         public static List<NgisFeature> EditObject(EditLineRequest request)
@@ -160,6 +159,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
         {
             var existingGeometry = (LineString)lineFeature.Geometry.Copy();
             var editOperation = edit.Operation;
+            
             lineFeature.Geometry = editOperation switch
             {
                 EditOperation.Edit => ReplaceNode(existingGeometry, edit.NodeIndex, edit.NodeCoordinate),
@@ -169,6 +169,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             };
             NgisFeatureHelper.SetOperation(lineFeature, Operation.Replace);
             return lineFeature;
+
         }
 
         private static List<ConnectingPoint> GetConnectingPoints(List<NgisFeature> affectedFeatures, LineString line, int index)
@@ -285,6 +286,8 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             => NgisFeatureHelper.GetAllReferences(feature)
                 .Select(lokalId => candidates.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == lokalId))
                 .OfType<NgisFeature>();
+
+        private static TopologyResponse EmptyInvalidResponse() => new() { IsValid = false, AffectedFeatures = new List<NgisFeature>() };
     }
 
     internal class ConnectingPoint
