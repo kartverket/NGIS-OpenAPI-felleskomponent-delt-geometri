@@ -572,11 +572,17 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal(3, response.AffectedFeatures.Count);
             
             var editedPolygonFeature = response.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon")!;
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedPolygonFeature));
 
             var polygon = (Polygon) polygonFeature!.Geometry;
             var editedPolygon = (Polygon)editedPolygonFeature.Geometry;
-            
             Assert.Equal(polygon.Shell.Coordinates.Length - 1, editedPolygon.Shell.Coordinates.Length);
+
+            var returnedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1")!;
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(returnedLine1));
+
+            var returnedLine2 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "2")!;
+            Assert.Null(returnedLine2.Update);
         }
 
         [Fact]
@@ -616,7 +622,142 @@ namespace DeltGeometriFelleskomponent.Tests
             
             Assert.Equal(editedPoint[0], editedLine1.Geometry.Coordinates[0].X);
             Assert.Equal(editedPoint[1], editedLine1.Geometry.Coordinates[0].Y);
+
+            var editedPolygonFeature = response.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon")!;
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedPolygonFeature));
+
+            var returnedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1")!;
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(returnedLine1));
+
+            var returnedLine2 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "2")!;
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(returnedLine2));
         }
+
+
+        [Fact]
+        public void DoesNotReturnLinesUnrelatedToChangeInAffectedFeaturesWhenEditingNonNodePoint()
+        {
+            var features = ReadFeatures("Examples/example_ngisfeatures_edit.geojson");
+
+            var line1 = features.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1c854251-4a5c-45f3-b21f-efb905299649")!;
+            var affected = features.Where(f => NgisFeatureHelper.GetLokalId(f) != "1c854251-4a5c-45f3-b21f-efb905299649")!;
+
+            var edit = new EditLineOperation()
+            {
+                NodeIndex = 2,
+                NodeValue = new List<double>() { 10.981049537658693, 60.82098367777078 },
+                Operation = EditOperation.Edit
+            };
+
+            var request = new EditLineRequest()
+            {
+                Feature = NgisFeatureHelper.Copy(line1),
+                Edit = edit,
+                AffectedFeatures = affected.Select(NgisFeatureHelper.Copy).ToList()
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+
+            Assert.True(response.IsValid);
+            Assert.Equal(3, response.AffectedFeatures.Count);
+
+            var editedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1c854251-4a5c-45f3-b21f-efb905299649")!;
+            var affectedLine = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "02999bcc-fe82-4ce6-8a2e-6f01aeac0b8a")!;
+            var affectedPolygon = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "f946043d-2c4b-4278-b1ac-6eb8073daac1")!;
+
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedLine1));
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(affectedPolygon));
+            Assert.Null(NgisFeatureHelper.GetOperation(affectedLine));
+        }
+
+        [Fact]
+        public void HandlesEditOfNodePointConnectingThreeLinesAndTwoPolygons()
+        {
+            var features = ReadFeatures("Examples/example_ngisfeatures_edit.geojson");
+
+            var line1 = features.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1c854251-4a5c-45f3-b21f-efb905299649")!;
+            var affected = features.Where(f => NgisFeatureHelper.GetLokalId(f) != "1c854251-4a5c-45f3-b21f-efb905299649")!;
+
+            var editIndex = 3;
+            var oldPoint = line1.Geometry.Coordinates[editIndex];
+            var newPoint = new Coordinate(10.982551574707031, 60.81545954370719);//new List<double>() {  };
+
+            var edit = new EditLineOperation()
+            {
+                NodeIndex = editIndex,
+                NodeValue = new List<double>() { newPoint.X, newPoint.Y },
+                Operation = EditOperation.Edit
+            };
+
+            var request = new EditLineRequest()
+            {
+                Feature = NgisFeatureHelper.Copy(line1),
+                Edit = edit,
+                AffectedFeatures = affected.Select(NgisFeatureHelper.Copy).ToList()
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+
+            Assert.True(response.IsValid);
+            Assert.Equal(5, response.AffectedFeatures.Count);
+
+            var editedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "1c854251-4a5c-45f3-b21f-efb905299649")!;
+            var affectedLine1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "02999bcc-fe82-4ce6-8a2e-6f01aeac0b8a")!;
+            var affectedLine2 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "0bcfc672-b215-4393-857e-d6a94418a4d8")!;
+            
+            var affectedPolygon1 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "f946043d-2c4b-4278-b1ac-6eb8073daac1")!;            
+            var affectedPolygon2 = response.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "a018176a-9a1b-4553-a3f5-a80400c24c87")!;
+
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedLine1));
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(affectedLine1));
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(affectedLine2));
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(affectedPolygon1));
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(affectedPolygon2));
+
+            Assert.Equal(newPoint, editedLine1.Geometry.Coordinates.Last());
+            Assert.Equal(newPoint, affectedLine1.Geometry.Coordinates.Last());
+            Assert.Equal(newPoint, affectedLine2.Geometry.Coordinates.Last());
+
+            Assert.Contains(affectedPolygon1.Geometry.Coordinates, c => c.Equals(newPoint));
+            Assert.DoesNotContain(affectedPolygon1.Geometry.Coordinates, c => c.Equals(oldPoint));
+
+            Assert.Contains(affectedPolygon2.Geometry.Coordinates, c => c.Equals(newPoint));
+            Assert.DoesNotContain(affectedPolygon2.Geometry.Coordinates, c => c.Equals(oldPoint));
+        }
+
+        [Fact]
+        public void DoesNotAllowDeleteWhichResultsInLineWithOnePoint()
+        {
+            var features = ReadFeatures("Examples/example_ngisfeatures_edit.geojson");
+
+            var line1 = features.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == "02999bcc-fe82-4ce6-8a2e-6f01aeac0b8a")!;
+            var affected = features.Where(f => NgisFeatureHelper.GetLokalId(f) != "02999bcc-fe82-4ce6-8a2e-6f01aeac0b8a")!;
+
+            
+            var edit = new EditLineOperation()
+            {
+                NodeIndex = 1,                
+                Operation = EditOperation.Delete
+            };
+
+            var request = new EditLineRequest()
+            {
+                Feature = NgisFeatureHelper.Copy(line1),
+                Edit = edit,
+                AffectedFeatures = affected.Select(NgisFeatureHelper.Copy).ToList()
+            };
+
+            var response = _topologyImplementation.EditLine(request);
+
+            foreach (var affectedFeature in response.AffectedFeatures)
+            {
+                output.WriteLine($"affected: {NgisFeatureHelper.GetLokalId(affectedFeature)} : {affectedFeature.Geometry.ToString()} ");
+            }
+
+            Assert.False(response.IsValid);
+            Assert.Empty(response.AffectedFeatures);
+        }
+
 
         [Fact]
         public void HandlesInsertOfNewConnectingNodeInLineUsedByAPolygon()

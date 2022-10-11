@@ -17,71 +17,58 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
                 throw new ArgumentException("Can only edit line features");
             }
 
-            var res = EditObject(request);
+            //apply the edit, get back all features directly affected
 
-            if (res.Count == 0)
-            {
-                return new TopologyResponse()
+            var editedLines = new List<NgisFeature>();
+            try { 
+                 editedLines = EditObject(request);
+                if (editedLines.Count == 0 || editedLines.Any(f => !f.Geometry.IsValid))
                 {
-                    AffectedFeatures = new List<NgisFeature>() { },
-                    IsValid = false
-                };
+                    return EmptyInvalidResponse();
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                return EmptyInvalidResponse();
             }
 
-            //get all polygons in affected features
-            var polygons = res.FindAll(f => f.Geometry.GeometryType == "Polygon");
+            var affectedIds = editedLines.Select(NgisFeatureHelper.GetLokalId).Distinct();
 
-            if (polygons.Count == 0)
+            //find all polygons affected by these changes
+            var affectedPolygons = request.AffectedFeatures
+                .Where(f => f.Geometry.GeometryType == "Polygon")
+                .Where(f => NgisFeatureHelper.GetAllReferences(f).Any(r => affectedIds.Contains(r)));
+
+            if (!affectedPolygons.Any())
             {
                 return new TopologyResponse()
                 {
-                    AffectedFeatures = res,
+                    AffectedFeatures = editedLines,
                     IsValid = true
                 };
             }
-            
-            var lineFeatures = res.FindAll(f => f.Geometry.GeometryType != "Polygon");
-            
-            //for each of the polygons, rebuild geometry
-            var editedPolygons = polygons.Select(p =>
-            {
-                var references = GetReferencedFeatures(p, lineFeatures);
-                var created = _polygonCreator.CreatePolygonFromLines(references.ToList(), null ).FirstOrDefault();
 
+            //find all references from the affected polygons to lines, since we have to return all these
+            var polygonReferences = affectedPolygons.Select(NgisFeatureHelper.GetAllReferences).SelectMany(ids => ids).ToList();
 
-                if (created == null)
-                {
-                    return null;
-                }
+            var affectedLines = request.AffectedFeatures
+                .Where(f => f.Geometry.GeometryType == "LineString")
+                .Where(f => !affectedIds.Contains(NgisFeatureHelper.GetLokalId(f)))
+                .Concat(editedLines)
+                .Where(f => polygonReferences.Contains(NgisFeatureHelper.GetLokalId(f)));
 
-                if (!created.IsValid)
-                {
-                    return null;
-                }
-
-                var geometry = created.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon")?.Geometry;
-                if (geometry == null)
-                {
-                    return null;
-                }
-                p.Geometry = geometry;
-                return p;
-            });
+            var editedPolygons = affectedPolygons.Select(p => RecreatePolygon(p, GetReferencedFeatures(p, affectedLines)));
 
             var isValid = editedPolygons.All(p => p != null);
-            var affectedFeatures = isValid
-                ? polygons
-                    .Select(polygon =>
-                        GetReferencedFeatures(polygon, lineFeatures).Concat(new List<NgisFeature>() { polygon }))
-                    .SelectMany(p => p)
-                    .Select(f => NgisFeatureHelper.SetOperation2(f, Operation.Replace)).ToList()
-                : new List<NgisFeature>();
 
-            return new TopologyResponse()
-            {
-                AffectedFeatures = affectedFeatures,
-                IsValid = isValid
-            };
+            return isValid 
+                ? new TopologyResponse()
+                {
+                    AffectedFeatures = affectedLines.Concat(editedPolygons).ToList()!,
+                    IsValid = true
+                }
+                : EmptyInvalidResponse();
+
         }
 
         private static void SetEditOperationAndNodeInfo(EditLineRequest request)
@@ -168,10 +155,12 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             var index = request.Edit!.NodeIndex;
 
             var originalGeometry = (LineString)lineFeature.Geometry.Copy();
-            lineFeature = ApplyChange(lineFeature, request.Edit);
+            var editedLineFeature = ApplyChange(lineFeature, request.Edit);
+            
 
             var coordinates = originalGeometry.Coordinates;
-            
+
+            var modifiedFeatures = new List<NgisFeature>() { editedLineFeature };
 
             if (IsEdgePoint(request.Edit, coordinates))
             {
@@ -183,44 +172,45 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
                     ? index - 1 
                     : index;
 
+                var isSingleLineForPoint = IsSingleLineForPoint(request);
                 //if the line is a single line making up a polygon, we have to consider the line itself for connecting points
-                var connects = IsSingleLineForPoint(request) 
-                    ? GetConnectingPoint(new List<NgisFeature>() { request.Feature }, originalGeometry, exsistingIndex) 
-                    : GetConnectingPoint(affectedFeatures, originalGeometry, exsistingIndex);
+                var connects = isSingleLineForPoint
+                    ? GetConnectingPoints(new List<NgisFeature>() { request.Feature }, originalGeometry, exsistingIndex) 
+                    : GetConnectingPoints(affectedFeatures, originalGeometry, exsistingIndex);
 
-                if (connects != null)
+                if (connects.Any())
                 {
-                    //remove the connected feature
-                    affectedFeatures = affectedFeatures.Where(f =>
-                        NgisFeatureHelper.GetLokalId(f) != NgisFeatureHelper.GetLokalId(connects.Feature)).ToList();
-
-                    //and rebuild it
-                    //this is going to get hairy when we get several connecting lines to a point
-                    //but that is a problem for another day!
-                    if (request.Edit.Operation == EditOperation.Delete)
-                    {
-                        var edited = originalGeometry.Coordinates[index == 0 ? 1 : coordinates.Length - 2];
-                        var newPos = new List<double>(){ edited.X,edited.Y };
-                        affectedFeatures.Add(ApplyChange(connects.Feature, new EditLineOperation()
+                    foreach (var connect in connects) { 
+                        //remove the connected feature
+                        modifiedFeatures = modifiedFeatures
+                            .Where(f => NgisFeatureHelper.GetLokalId(f) != NgisFeatureHelper.GetLokalId(connect.Feature))
+                            .ToList();
+                       
+                        if (request.Edit.Operation == EditOperation.Delete)
                         {
-                            NodeValue = newPos,
-                            Operation = EditOperation.Edit,
-                            NodeIndex = connects.Index
-                        }));
-                    }
-                    else
-                    {
-                        affectedFeatures.Add(ApplyChange(connects.Feature, new EditLineOperation()
+                            var edited = originalGeometry.Coordinates[index == 0 ? 1 : coordinates.Length - 2];
+                            var newPos = new List<double>(){ edited.X,edited.Y };
+                            modifiedFeatures.Add(ApplyChange(connect.Feature, new EditLineOperation()
+                            {
+                                NodeValue = newPos,
+                                Operation = EditOperation.Edit,
+                                NodeIndex = connect.Index
+                            }));
+                        }
+                        else
                         {
-                            NodeValue = request.Edit.NodeValue,
-                            Operation = EditOperation.Edit,
-                            NodeIndex = connects.Index
-                        }));
+                            modifiedFeatures.Add(ApplyChange(connect.Feature, new EditLineOperation()
+                            {
+                                NodeValue = request.Edit.NodeValue,
+                                Operation = EditOperation.Edit,
+                                NodeIndex = connect.Index
+                            }));
+                        }
                     }
                 }
             }
             
-            return new List<NgisFeature>() { lineFeature }.Concat(affectedFeatures).ToList();
+            return modifiedFeatures.ToList();
         }
 
         private static bool IsSingleLineForPoint(EditLineRequest request)
@@ -230,7 +220,6 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
                 var references = NgisFeatureHelper.GetAllReferences(request.AffectedFeatures[0]);
                 return references.Count == 1 && references[0] == NgisFeatureHelper.GetLokalId(request.Feature);
             }
-
             return false;
         }
 
@@ -242,7 +231,6 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
                 //edge the insert has to be at maxIndex+1 (also known as count)
                 return edit.NodeIndex == 0 || edit.NodeIndex == coordinates.Count ;
             }
-
             return edit.NodeIndex == 0 || edit.NodeIndex == coordinates.Count - 1;
         }
 
@@ -250,37 +238,41 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
         {
             var existingGeometry = (LineString)lineFeature.Geometry.Copy();
             var editOperation = edit.Operation;
+            
             lineFeature.Geometry = editOperation switch
             {
                 EditOperation.Edit => ReplaceNode(existingGeometry, edit.NodeIndex, edit.NodeCoordinate),
                 EditOperation.Delete => DeletePoint(existingGeometry, edit.NodeIndex),
                 EditOperation.Insert => InsertPoint(existingGeometry, edit.NodeIndex, edit.NodeCoordinate),
-                _ => throw new NotImplementedException(),
+                _ => lineFeature.Geometry,
+
             };
+            NgisFeatureHelper.SetOperation(lineFeature, Operation.Replace);
             return lineFeature;
+
         }
 
-        private static ConnectingPoint? GetConnectingPoint(List<NgisFeature> affectedFeatures, LineString line, int index)
+        private static List<ConnectingPoint> GetConnectingPoints(List<NgisFeature> affectedFeatures, LineString line, int index)
         {
             var coordinate = line.Coordinates[index];
             var buffered = new Point(coordinate).Buffer(line.Length * 0.001);
             var candidates = affectedFeatures.Where(f => f.Geometry.GeometryType == "LineString").Where(f => f.Geometry.Intersects(buffered));
 
+            var connectingPoints = new List<ConnectingPoint>();
+            
             foreach (var candidate in candidates)
             {
                 if (candidate.Geometry.Coordinates.First().Equals2D(coordinate))
                 {
-                    return new ConnectingPoint() { Index = 0, Feature = candidate };
+                    connectingPoints.Add(new ConnectingPoint() { Index = 0, Feature = candidate });
                 }
                 if (candidate.Geometry.Coordinates.Last().Equals2D(coordinate))
                 {
-                    return new ConnectingPoint() { Index = candidate.Geometry.Coordinates.Length - 1, Feature = candidate };
+                    connectingPoints.Add(new ConnectingPoint() { Index = candidate.Geometry.Coordinates.Length - 1, Feature = candidate });
                 }
             }
-
-            return null;
+            return connectingPoints;
         }
-
 
         private static LineString ReplaceNode(LineString line, int index, Coordinate? newValue)
         {
@@ -301,36 +293,28 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
                 throw new Exception("Missing Coordinate value");
             }
 
-            
             var element = (LineString)geom;
-
             var oldSeq = element.CoordinateSequence;
-            var newSeq = element.Factory.CoordinateSequenceFactory.Create(
-                oldSeq.Count + 1, oldSeq.Dimension, oldSeq.Measures);
+            var newSeq = element.Factory.CoordinateSequenceFactory.Create(oldSeq.Count + 1, oldSeq.Dimension, oldSeq.Measures);
 
-            
-            if (index == 0)
-            {
-                // Before first point
+            if (index == 0) // Before first point
+            {                
                 newSeq.SetCoordinate(0, newPoint);
                 CoordinateSequences.Copy(oldSeq, 0, newSeq, 1, oldSeq.Count);
             }
-            else if (index == oldSeq.Count)
-            {
-                // Last point
+            else if (index == oldSeq.Count) // Last point
+            {                 
                 CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, oldSeq.Count);
                 newSeq.SetCoordinate(oldSeq.Count, newPoint);
             }
-            else
+            else //point in the middle
             {
                 CoordinateSequences.Copy(oldSeq, 0, newSeq, 0, index );
                 newSeq.SetCoordinate(index , newPoint);
                 CoordinateSequences.Copy(oldSeq, index , newSeq, index +1 , newSeq.Count - 1 - index);
             }
             
-
-            var linestring = geom.Factory.CreateLineString(newSeq);
-            return linestring;
+            return geom.Factory.CreateLineString(newSeq);            
         }
 
         private static Geometry DeletePoint(Geometry geom, int index)
@@ -361,13 +345,29 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             }
 
             var linestring = geom.Factory.CreateLineString(newSeq);
-            return linestring;
-            
+            return linestring;            
         }
 
-        private static IEnumerable<NgisFeature> GetReferencedFeatures(NgisFeature feature, List<NgisFeature> candidates)
-            => NgisFeatureHelper.GetAllReferences(feature).Select(lokalId => candidates.Find(f => NgisFeatureHelper.GetLokalId(f) == lokalId)).OfType<NgisFeature>();
+        private static NgisFeature? RecreatePolygon(NgisFeature polygonFeature, IEnumerable<NgisFeature> references)
+        {
+            var created = _polygonCreator.CreatePolygonFromLines(references.ToList(), null).FirstOrDefault();
 
+            if (created == null || !created.IsValid)
+            {
+                return null;
+            }
+
+            polygonFeature.Geometry = created.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon")?.Geometry!;
+            NgisFeatureHelper.SetOperation(polygonFeature, Operation.Replace);
+            return polygonFeature;
+        }
+
+        private static IEnumerable<NgisFeature> GetReferencedFeatures(NgisFeature feature, IEnumerable<NgisFeature> candidates)
+            => NgisFeatureHelper.GetAllReferences(feature)
+                .Select(lokalId => candidates.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == lokalId))
+                .OfType<NgisFeature>();
+
+        private static TopologyResponse EmptyInvalidResponse() => new() { IsValid = false, AffectedFeatures = new List<NgisFeature>() };
     }
 
     internal class ConnectingPoint

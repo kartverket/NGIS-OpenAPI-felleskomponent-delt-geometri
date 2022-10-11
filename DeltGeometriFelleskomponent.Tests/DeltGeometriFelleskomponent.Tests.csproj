@@ -37,6 +37,9 @@
     <None Update="Examples\example_geometries.geojson">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Examples\example_ngisfeatures_edit.geojson">
+     <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Examples\polygon_from_lines_input.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

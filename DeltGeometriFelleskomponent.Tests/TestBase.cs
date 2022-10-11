@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -14,6 +15,12 @@ public abstract class TestBase
     {
         var text = System.IO.File.ReadAllText(path);
         return GeoJsonConvert.DeserializeObject<NgisFeature>(text);
+    }
+
+    protected static List<NgisFeature> ReadFeatures(string path)
+    {
+        var text = System.IO.File.ReadAllText(path);
+        return GeoJsonConvert.DeserializeObject<List<NgisFeature>>(text);
     }
 
     protected static NgisFeature GetExampleFeature(string id)
