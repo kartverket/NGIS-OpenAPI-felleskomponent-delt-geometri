@@ -117,7 +117,68 @@ Klasser brukt av Api og TopologyImplementation
 ### DeltGeometriFelleskomponent.Tests
 Tester (xUnit)
 
-### Geometri-eksempler
+
+## Eksempler
+### Opprette flate ved å tegne et polygon
+De fleste enkle klienter har funksjonalitet for å tegne polygoner. 
+
+For å representere et polygon med delt geometri trenger vi å opprette en linje-avgrensning. Dette kan gjøres med ```createGeometry```-endepunktet.
+
+![Eksempler](gifs/create_polygon_from_polygon.gif)
+
+1. Brukeren tegner et polygon
+2. Klienten sender polygonet til ```createGeometry```
+3. ```createGeometry``` returnerer en flate og en linje
+4. Klienten viser opprettede geometrier
+5. Brukeren fyller ut egenskaper for flate og linje
+6. Klienten sender flate og linje til NgisOpenApi for lagring
+
+
+### Opprette flate ved å velge linjer
+For å lage mer avanserte flater med referanser til mer enn en grenselinje må man lage et flate-objekt med referanser til linjene.
+
+Felleskomponentens metode ```polygonFromLines``` har funksjonalitet for å bistå med dette. 
+
+![Eksempler](gifs/create_polygon_from_lines.gif)
+
+1. Brukeren tegner en rekke linjer (OBS: her må snap-funksjonalitet brukes slik at de er koblet sammen)
+2. Klienten sender linjene til NgisOpenApi for lagring
+3. Brukeren velger linjene som skal danne en flate
+4. Klienten sender linjene til ```polygonFromLines```
+5. Klienten kan vise opprettet flate 
+5. Brukeren fyller ut egenskaper for flate 
+6. Klienten sender flate til NgisOpenApi for lagring
+
+### Flytte punkt på en linje
+Når et punkt på en linje flyttes kan en eller to flater påvirkes. ```editLine``` har funksjonalitet for å hjelpe med dette
+
+![Eksempler](gifs/edit_line_move_point.gif)
+1. Brukeren velger linje som skal redigeres
+2. Brukeren flytter et punkt
+3. Klienten sender feature, avhengigheter samt endring til ```editLine```
+4. Redigerte objekter kan vises
+5. Redigerte objekter kan sendes til NgisOpenApi for lagring
+
+### Slette punkt på en linje
+Samme operasjon som for å flytte punkt
+
+![Eksempler](gifs/edit_line_delete_point.gif)
+
+### Sette inn punkt på en linje
+Samme operasjon som for å flytte punkt
+
+![Eksempler](gifs/edit_line_insert_point.gif)
+
+### Redigere nodepunkt på linje
+Et nodepunkt er et (ende)punkt på en linje der flere linjer kan møtes. Når et slikt punkt redigeres kan n antall flater og n antall linjer påvirkes. ```editLine``` skal håndtere dette.
+
+![Eksempler](gifs/edit_line_move_nodepoint.gif)
+
+![Eksempler](gifs/edit_line_move_complex_nodepoint.gif)
+
+
+
+## Geometri-eksempler
 ![Eksempler](img/geometries.png)
 Fila ```DeltGeometriFelleskomponent.Tests\Examples\example_geometries.geojson``` inneholder en rekke eksempelgeometrier, som kan kombineres på følgende måter
 
