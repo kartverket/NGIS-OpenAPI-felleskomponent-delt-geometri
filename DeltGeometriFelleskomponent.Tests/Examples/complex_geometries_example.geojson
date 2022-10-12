@@ -1,0 +1,149 @@
+﻿{
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.93710423,
+            60.85199736
+          ],
+          [
+            10.94253302,
+            60.85144344
+          ]
+        ]
+      },
+      "properties": {
+        "featuretype": "TiltakGrense",
+        "kvalitet": {
+          "målemetode": "45",
+          "nøyaktighet": 1
+        },
+        "identifikasjon": {
+          "lokalId": "8a454969-03f4-48f8-b445-274cce15b62f",
+          "navnerom": "http://data.geonorge.no/SFKB/FKB-Tiltak/so",
+          "versjonId": "2022-10-11 12:33:15.872758000"
+        },
+        "oppdateringsdato": "2022-10-11T12:33:15"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.94253302,
+            60.85144344
+          ],
+          [
+            10.944378,
+            60.85113
+          ]
+        ]
+      },
+      "properties": {
+        "featuretype": "TiltakGrense",
+        "kvalitet": {
+          "målemetode": "45",
+          "nøyaktighet": 1
+        },
+        "identifikasjon": {
+          "lokalId": "5b22a1de-ed10-4809-81da-c9bd2fea2bb8",
+          "navnerom": "http://data.geonorge.no/SFKB/FKB-Tiltak/so",
+          "versjonId": "2022-10-11 12:22:53.058974000"
+        },
+        "oppdateringsdato": "2022-10-11T12:22:53"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.944378,
+            60.85113
+          ],
+          [
+            10.944936,
+            60.849792
+          ]
+        ]
+      },
+      "properties": {
+        "featuretype": "TiltakGrense",
+        "kvalitet": {
+          "målemetode": "45",
+          "nøyaktighet": 1
+        },
+        "identifikasjon": {
+          "lokalId": "239848d3-9a03-418b-898f-69efa45e4c11",
+          "navnerom": "http://data.geonorge.no/SFKB/FKB-Tiltak/so",
+          "versjonId": "2022-10-11 12:14:49.713440000"
+        },
+        "oppdateringsdato": "2022-10-11T12:14:49"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.944936,
+            60.849792
+          ],
+          [
+            10.93830585,
+            60.84967708
+          ]
+        ]
+      },
+      "properties": {
+        "featuretype": "TiltakGrense",
+        "kvalitet": {
+          "målemetode": "45",
+          "nøyaktighet": 1
+        },
+        "identifikasjon": {
+          "lokalId": "cfe0e792-5320-40a1-aa00-9def7841663e",
+          "navnerom": "http://data.geonorge.no/SFKB/FKB-Tiltak/so",
+          "versjonId": "2022-10-11 12:33:15.872758000"
+        },
+        "oppdateringsdato": "2022-10-11T12:33:15"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.93830585,
+            60.84967708
+          ],
+          [
+            10.93710423,
+            60.85199736
+          ]
+        ]
+      },
+      "properties": {
+        "featuretype": "TiltakGrense",
+        "kvalitet": {
+          "målemetode": "45",
+          "nøyaktighet": 1
+        },
+        "identifikasjon": {
+          "lokalId": "8d005937-384b-4fc9-8aae-9a8e6a65c611",
+          "navnerom": "http://data.geonorge.no/SFKB/FKB-Tiltak/so",
+          "versjonId": "2022-10-11 12:33:15.872758000"
+        },
+        "oppdateringsdato": "2022-10-11T12:33:15"
+      }
+    }
+  ]
+}

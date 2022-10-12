@@ -1,8 +1,6 @@
 ﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Operation.Polygonize;
-using NetTopologySuite.Operation.Valid;
-using System.Linq;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
@@ -76,7 +74,8 @@ public class PolygonCreator
 
             if (orderedPolygon != null)
             {
-                var exteriorReferences = GetOrientedFeatures(orderedPolygon.ExteriorRing, lineFeatures).Reverse().ToList();
+
+                var exteriorReferences = GetOrientedFeatures(orderedPolygon.ExteriorRing, lineFeatures).ToList();
                 referencesExterior = exteriorReferences.Select(p => p.Feature).ToList();
 
                 var interiorReferences = orderedPolygon.InteriorRings.Select(hole => GetOrientedFeatures(hole, lineFeatures).ToList()).ToList();
@@ -140,32 +139,44 @@ public class PolygonCreator
         return new Polygon(ring, holes);
     }
 
-    private static bool IsSubList(IReadOnlyList<Coordinate> list, IReadOnlyList<Coordinate> sublist)
-    {
-        for (var i = 1; i < list.Count(); i++)
-        {
-            var a = list[i - 1];
-            var b = list[i];
-            if (a.Equals(sublist[0]) && b.Equals(sublist[1]))
-            {
-                return true;
-            }
-
-        }
-
-        return false;
-    }
-
     private static string GetIdWithDirection(FeatureWithDirection f) =>
         $"{(f.IsReversed ? "-" : "")}{NgisFeatureHelper.GetLokalId(f.Feature)}";
 
-
     private static IEnumerable<FeatureWithDirection> GetOrientedFeatures(Geometry ring, IEnumerable<NgisFeature> candidates)
-        => candidates.Where(candidate => candidate.Geometry.CoveredBy(ring)).Select(candidate =>
+    {
+        var references = candidates.Where(candidate => candidate.Geometry.CoveredBy(ring));
+
+        var coords = ring.Coordinates;
+        var first = references.FirstOrDefault(r => r.Geometry.Coordinates[0].Equals(coords[0]) && r.Geometry.Coordinates[1].Equals(coords[1]) );
+
+        var index = 0;
+        var res = new List<FeatureWithDirection>();
+        while (references.Count() > 0) {
+            var line = GetLineAtPosition(coords, index, references);
+            res.Add(line);
+            index += line.Feature.Geometry.Coordinates.Length -1;
+            references = references.Where(r => NgisFeatureHelper.GetLokalId(r) != NgisFeatureHelper.GetLokalId(line.Feature));
+        }        
+        return res;        
+    }
+    
+    private static FeatureWithDirection GetLineAtPosition(Coordinate[] coords, int index, IEnumerable<NgisFeature> references)
+    {
+        var rightWay = references.FirstOrDefault(r => StartsAtPosition(coords, index, r.Geometry));
+        if (rightWay != null)
         {
-            var reversed = !IsSubList(ring.Coordinates, candidate.Geometry.Coordinates.Take(2).ToList());
-            return new FeatureWithDirection(){Feature = candidate, IsReversed = reversed};
-        });
+            return new FeatureWithDirection { Feature = rightWay, IsReversed = false };
+        }
+        var reversed = references.FirstOrDefault(r => StartsAtPosition(coords, index, r.Geometry.Reverse()));
+        if (reversed != null)
+        {
+            return new FeatureWithDirection { Feature = reversed, IsReversed = true };
+        }
+        throw new Exception("should not happen!");
+    }
+
+    private static bool StartsAtPosition(Coordinate[] coords, int index, Geometry line)
+        => line.Coordinates[0].Equals(coords[index]) && line.Coordinates[1].Equals(coords[index + 1]);
     
 
     private class FeatureWithDirection 
