@@ -34,6 +34,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Examples\complex_geometries_example.geojson">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Examples\example_geometries.geojson">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
