@@ -17,15 +17,17 @@ public class TopologyImplementation : ITopologyImplementation
                 IsValid = true
             },
             null => new TopologyResponse()
-
         };
 
     public IEnumerable<TopologyResponse> CreatePolygonsFromLines(CreatePolygonFromLinesRequest request)
         => _polygonCreator.CreatePolygonFromLines(request.Features, request.Centroids);
 
     public TopologyResponse EditLine(EditLineRequest request)
-        => GeometryEdit.EditLine(request); 
-    
+        => LineEditor.EditLine(request);
+
+    public TopologyResponse EditPolygon(EditPolygonRequest request)
+        => PolygonEditor.EditPolygon(request);
+
     private TopologyResponse HandlePolygon(CreateGeometryRequest request)
     {
         var result = new TopologyResponse()
@@ -39,8 +41,7 @@ public class TopologyImplementation : ITopologyImplementation
             if (request.Feature.Geometry_Properties?.Exterior == null) return new TopologyResponse();
             var referredFeatures = GetReferredFeatures(request.Feature, result.AffectedFeatures);
             // CreatePolygonFromLines now return NgisFeature FeatureReferences for lines
-            var res = _polygonCreator.CreatePolygonFromLines(referredFeatures, null);
-            //res.AffectedFeatures = result.AffectedFeatures.Concat(res.AffectedFeatures).ToList();
+            var res = _polygonCreator.CreatePolygonFromLines(referredFeatures, null);           
             return res.First();
         }
         return _polygonCreator.CreatePolygonFromGeometry(request);
@@ -82,4 +83,6 @@ public class TopologyImplementation : ITopologyImplementation
 
         return referredFeatures;
     }
+
+   
 }

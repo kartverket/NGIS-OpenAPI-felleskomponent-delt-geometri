@@ -1,12 +1,10 @@
-﻿using System.Linq;
-using DeltGeometriFelleskomponent.Models;
-using NetTopologySuite.Features;
+﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
 
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation
 {
-    public class GeometryEdit
+    public class LineEditor
     {
         private static readonly PolygonCreator _polygonCreator = new();
 

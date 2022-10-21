@@ -483,7 +483,7 @@ namespace DeltGeometriFelleskomponent.Tests
             lineStringModified[1].Y += 20;
 
             var movedCoordinate = new Coordinate() { X = lineStringModified[1].X, Y = lineStringModified[1].Y };
-            var edited = GeometryEdit.EditObject(new EditLineRequest()
+            var edited = LineEditor.EditObject(new EditLineRequest()
             {
                 AffectedFeatures = affectedFeatures,
                 Feature = lineFeature1,
@@ -520,7 +520,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
             var coordinateCount1 = lineFeature1.Geometry.Coordinates.Length;
 
-            var edited = GeometryEdit.EditObject(new EditLineRequest()
+            var edited = LineEditor.EditObject(new EditLineRequest()
             {
                 AffectedFeatures = affectedFeatures,
                 Feature = lineFeature1,

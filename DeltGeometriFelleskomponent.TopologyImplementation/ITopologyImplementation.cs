@@ -10,5 +10,7 @@ public interface ITopologyImplementation
 
     TopologyResponse EditLine(EditLineRequest request);
 
+    TopologyResponse EditPolygon(EditPolygonRequest request);
+
     //TopologyResponse CreatePolygonFromGeometry(ToplogyRequest request);
 }

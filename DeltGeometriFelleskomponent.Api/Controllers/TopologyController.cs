@@ -302,5 +302,10 @@ namespace DeltGeometriFelleskomponent.Api.Controllers
         public TopologyResponse EditLine([FromBody] EditLineRequest request)
             => _topologyImplementation.EditLine(request);
 
+
+        [HttpPost(template: "editPolygon")]
+        public TopologyResponse EditPolygon([FromBody] EditPolygonRequest request)
+            => _topologyImplementation.EditPolygon(request);
+
     }
 }
