@@ -1,5 +1,6 @@
 ﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
+using System.Linq;
 using System.Net.NetworkInformation;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
@@ -14,17 +15,59 @@ public static class PolygonEditor
             throw new Exception("Can only edit polygons");
         }
 
-        var edits = GetShellEdits(request);
+        var shellEdits = GetShellEdits(request);
+        var holeEdits = GetHoleEdits(request);
 
-        if (edits.Count() == 0)
+        var editCount = shellEdits.Count() + holeEdits.Count();
+
+        if (editCount == 0)
         {
             throw new Exception("No edits found");
         }
-        if (edits.Count() > 1)
+        if (editCount > 1)
         {
             throw new Exception("Multiple edits found. Not supported!");
         }
-        return LineEditor.EditLine(edits.First());        
+
+
+        if (shellEdits.Count() > 0)
+        {
+            return LineEditor.EditLine(shellEdits.First());
+        }
+        return ApplyHoleEdit(holeEdits.First());
+
+    }
+
+    private static TopologyResponse ApplyHoleEdit(HoleEdit edit)
+    {
+        if (edit.Operation == EditOperation.Insert)
+        {
+            var hole = PolygonCreator.CreateInteriorFeature(new LineString(edit.Ring.Coordinates));
+
+            var feature = AddHole(edit.Feature, hole);
+            
+            NgisFeatureHelper.SetOperation(feature, Operation.Replace);
+
+            return new TopologyResponse() { 
+                IsValid = true, 
+                AffectedFeatures = new List<NgisFeature>() { feature, hole}.Concat(edit.AffectedFeatures != null ? edit.AffectedFeatures : new List<NgisFeature>()).ToList()
+            };
+        }
+
+        return new TopologyResponse() { IsValid = false, AffectedFeatures = new List<NgisFeature>() };
+    }
+
+    private static NgisFeature AddHole(NgisFeature feature, NgisFeature hole)
+    {
+        var polygon = (Polygon)feature.Geometry;        
+        var holes = polygon.Holes.ToList();
+        var ring = new LinearRing(hole.Geometry.Coordinates);
+        holes.Add(ring);        
+        feature.Geometry = PolygonCreator.EnsureOrdering(new Polygon(polygon.Shell, holes.ToArray()));
+        var interiors = NgisFeatureHelper.GetInteriors(feature);
+        interiors.Add(new List<string>() { NgisFeatureHelper.GetLokalId(hole) });
+        NgisFeatureHelper.SetInterior(feature, interiors);
+        return feature;
     }
 
     private static IEnumerable<EditLineRequest> GetShellEdits(EditPolygonRequest request)
@@ -36,6 +79,43 @@ public static class PolygonEditor
 
         return ToEdits(pairs, GetShellFeatures(request.Feature, request.AffectedFeatures), request.Feature, oldPolygon.Shell).OfType<EditLineRequest>();
     }
+
+    private static LinearRing[] GetHoles(Polygon polygon)
+        => polygon.Holes ?? new LinearRing[] {};
+    
+
+    private static IEnumerable<HoleEdit> GetHoleEdits(EditPolygonRequest request)
+    {
+        var oldHoles = GetHoles((Polygon)request.Feature.Geometry);
+        var newHoles = GetHoles(request.EditedGeometry);
+
+        if (oldHoles.Count() == newHoles.Count())
+        {
+            //check for edits
+            return new List<HoleEdit>();
+        }
+        if (oldHoles.Count() < newHoles.Count())
+        {
+            return GetRingsNotIn(oldHoles, newHoles).Select(hole => new HoleEdit()
+            {
+                Operation = EditOperation.Insert,
+                Ring = hole,
+                Feature = request.Feature,
+                AffectedFeatures = request.AffectedFeatures
+            }).ToList();
+           
+        }
+        if (oldHoles.Count() > newHoles.Count())
+        {
+            //check for removals
+            return new List<HoleEdit>();
+        }
+
+        return new List<HoleEdit>();
+    }
+
+    private static LinearRing[] GetRingsNotIn(LinearRing[] a, LinearRing[] b)
+        => b.Where(r => !a.Any(x => x.Equals(r))).ToArray();
 
     private static IEnumerable<EditLineRequest> ToEdits(IEnumerable<Pair> pairs, IEnumerable<NgisFeature> referencedFeatures, NgisFeature editedPolygonFeature, LinearRing ring)
     {
@@ -168,7 +248,16 @@ public static class PolygonEditor
         public Coordinate? NewCoord { get; set; }
         public int? NewCoordPrevIndex { get; set; }
     }
-    
+
+    internal class HoleEdit
+    {
+        public int? Index { get; set; }
+        public EditOperation Operation { get; set; }
+        public LinearRing Ring { get; set; }
+        public NgisFeature Feature { get; set; }
+        public List<NgisFeature>? AffectedFeatures { get; set; }
+    }
+
 }
 
 

@@ -11,6 +11,7 @@ namespace DeltGeometriFelleskomponent.Tests;
 public class PolygonEditorTest : TestBase
 {
     private readonly ITestOutputHelper output;
+    const string id = "id";
 
     public PolygonEditorTest(ITestOutputHelper output)
     {
@@ -44,8 +45,8 @@ public class PolygonEditorTest : TestBase
 
         //assert
         Assert.True(result.IsValid);
-        
-        var editedPolygon = ((Polygon) result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon").Geometry);
+
+        var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length, editedPolygon.Shell.Coordinates.Length);
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newVertex));
@@ -79,8 +80,8 @@ public class PolygonEditorTest : TestBase
 
         //assert
         Assert.True(result.IsValid);
-        var editedPolygon = ((Polygon)result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon").Geometry);
-        
+        var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
+
         output.WriteLine($"edited:   {editedPolygon}");
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length - 1, editedPolygon.Shell.Coordinates.Length);
         Assert.DoesNotContain(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));        
@@ -114,7 +115,7 @@ public class PolygonEditorTest : TestBase
         //assert
         Assert.True(result.IsValid);
 
-        var editedPolygon = ((Polygon)result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon").Geometry);
+        var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length + 1, editedPolygon.Shell.Coordinates.Length);
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newVertex));
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));
@@ -153,7 +154,7 @@ public class PolygonEditorTest : TestBase
 
         Assert.True(result.IsValid);
 
-        var editedPolygon = (Polygon) result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon").Geometry;
+        var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
 
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length, editedPolygon.Shell.Coordinates.Length);
@@ -196,7 +197,7 @@ public class PolygonEditorTest : TestBase
 
         Assert.True(result.IsValid);
 
-        var editedPolygon = (Polygon)result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon").Geometry;
+        var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
 
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length, editedPolygon.Shell.Coordinates.Length);
@@ -237,7 +238,7 @@ public class PolygonEditorTest : TestBase
 
         Assert.True(result.IsValid);
 
-        var editedPolygon = (Polygon)result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon").Geometry;
+        var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
 
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length - 1, editedPolygon.Shell.Coordinates.Length);
@@ -278,7 +279,7 @@ public class PolygonEditorTest : TestBase
 
         Assert.True(result.IsValid);
 
-        var editedPolygon = (Polygon)result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon").Geometry;
+        var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
 
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length + 1, editedPolygon.Shell.Coordinates.Length);
@@ -287,12 +288,69 @@ public class PolygonEditorTest : TestBase
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newVertex));
     }
 
+    [Fact]
+    public void AddsHoleToPolygonWithoutHoles()
+    {
+        //arrange        
+        //build a polygon from a line
+        var (polygon, lines) = GetPolygonFrom(new List<string>() { "1", "2" });
+
+        var holeLine = GetExampleFeature("8").Geometry.Coordinates;
+
+        output.WriteLine($"original: {polygon.Geometry}");
+        foreach (var line in lines)
+        {
+            output.WriteLine($"line {NgisFeatureHelper.GetLokalId(line)}: {line.Geometry}");
+        }
+
+        //move one of the vertices of the line and create a new polygon
+        var shell = ((Polygon)polygon.Geometry).Shell;
+        var hole = new LinearRing(holeLine);
+
+        var geometry = new Polygon(shell, new LinearRing[] { hole });
+        output.WriteLine($"geometry:   {geometry}");
+        //act
+        //ie: apply this change
+        var result = PolygonEditor.EditPolygon(new EditPolygonRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(polygon),
+            AffectedFeatures = lines,
+            EditedGeometry = geometry
+        });
+
+        //assert
+
+        Assert.True(result.IsValid);
+
+
+        var(editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
+        output.WriteLine($"edited:   {editedPolygon}");
+
+        var createdLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Create);
+        Assert.Single(createdLines);
+
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
+        Assert.Equal(Operation.Replace, editedFeature.Update.Action);
+
+        Assert.True(geometry.Equals(editedPolygon));
+        Assert.Equal(NgisFeatureHelper.GetLokalId(createdLines.First()), NgisFeatureHelper.GetInteriors(editedFeature)[0][0]);
+
+    }
+
+    private (NgisFeature, Polygon) GetEdited(List<NgisFeature> affectedFeatures)
+    {
+        var editedFeature = affectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+        var editedPolygon = (Polygon)editedFeature.Geometry;
+        return (editedFeature, editedPolygon);
+    }
 
     private (NgisFeature, List<NgisFeature>) GetPolygonFrom(List<string> ids)
     {
         var lines = ids.Select(GetExampleFeature).ToList();
         var res = new PolygonCreator().CreatePolygonFromLines(lines.ToList(), null);
         var polygon = res.First().AffectedFeatures.First(f => f.Geometry.GeometryType == "Polygon");
+        polygon.Update = null;
+        NgisFeatureHelper.SetLokalId(polygon, id);
         return (polygon, lines);
 
     }

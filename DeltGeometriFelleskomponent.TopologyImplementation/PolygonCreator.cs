@@ -126,7 +126,7 @@ public class PolygonCreator
         return interiorFeatures;
     }
 
-    private static NgisFeature CreateInteriorFeature(LineString ring)
+    public static NgisFeature CreateInteriorFeature(LineString ring)
     {
         var interiorFeature = NgisFeatureHelper.CreateFeature(ring);
         NgisFeatureHelper.SetOperation(interiorFeature, Operation.Create);
