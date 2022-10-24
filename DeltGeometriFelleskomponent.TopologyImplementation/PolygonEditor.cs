@@ -93,7 +93,7 @@ public static class PolygonEditor
         var ringFeatureId = ringFeature != null ? NgisFeatureHelper.GetLokalId(ringFeature) : null;
         var interiors = NgisFeatureHelper.GetInteriors(feature);
 
-        NgisFeatureHelper.SetInterior(feature, ringFeatureId != null ? interiors.Where(h => !h.Contains(ringFeatureId)).ToArray() : interiors);
+        NgisFeatureHelper.SetInterior(feature, ringFeatureId != null ? interiors.Where(h => !h.Select(NgisFeatureHelper.RemoveSign).Contains(ringFeatureId)).ToArray() : interiors);
         return new List<NgisFeature>() { feature };
     }
 
