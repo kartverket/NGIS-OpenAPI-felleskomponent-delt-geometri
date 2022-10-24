@@ -19,25 +19,37 @@ public class PolygonEditorTest : TestBase
     }
 
     [Fact]
-    public void EditsPolygonWithOneRingAndNoOtherReferences()
+    public void EditsPolygonWithOneRingAndNoOtherReferencesByEditingPoint()
     {
-        //arrange
+        //arrange        
+        //build a polygon from a line
         var line = GetExampleFeature("8");
         var res = new PolygonCreator().CreatePolygonFromLines(new List<NgisFeature>() { line }, null);
         var polygon = res.First().AffectedFeatures.First(f => f.Geometry.GeometryType == "Polygon");
 
+        output.WriteLine($"original: {polygon.Geometry}");
+
+        //move one of the vertices of the line and create a new polygon
         var ring = ((Polygon)polygon.Geometry).Shell.Copy().Coordinates;
         ring[1].X = ring[1].X + 0.00001;
         var geometry = new Polygon(new LinearRing(ring));
 
         //act
+        //ie: apply this change
         var result = PolygonEditor.EditPolygon(new EditPolygonRequest() { 
-            Feature = polygon, 
-            AffectedFeatures= new List<NgisFeature> { line },
+            Feature = NgisFeatureHelper.Copy(polygon), 
+            AffectedFeatures = new List<NgisFeature> { line },
             EditedGeometry = geometry
         });
 
+        //assert
+
+        var editedPolygon = result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
+
+        Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates[1].X + 0.00001, ((Polygon)editedPolygon.Geometry).Shell.Coordinates[1].X);
+        output.WriteLine($"edited:   {editedPolygon.Geometry}");
 
     }
 
+    
 }
