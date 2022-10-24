@@ -47,7 +47,7 @@ public static class PolygonEditor
             if (referencedLineFeature != null) { 
                 var edit = ToEdit(pair, referencedLineFeature);
                 if (edit != null) { 
-                    edit.AffectedFeatures = new List<NgisFeature>() { editedPolygonFeature }.Concat( referencedFeatures.Where(f => NgisFeatureHelper.GetLokalId(f) != NgisFeatureHelper.GetLokalId(f))).ToList();
+                    edit.AffectedFeatures = new List<NgisFeature>() { editedPolygonFeature }.Concat( referencedFeatures.Where(f => NgisFeatureHelper.GetLokalId(referencedLineFeature) != NgisFeatureHelper.GetLokalId(f))).ToList();
                     res.Add(edit);
                 }
             }

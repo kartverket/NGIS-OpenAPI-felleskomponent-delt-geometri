@@ -19,13 +19,11 @@ public class PolygonEditorTest : TestBase
     }
 
     [Fact]
-    public void EditsPolygonWithOneRingAndNoOtherReferencesByEditingPoint()
+    public void OneLineReferencedEditShellVertex()
     {
         //arrange        
         //build a polygon from a line
-        var line = GetExampleFeature("8");
-        var res = new PolygonCreator().CreatePolygonFromLines(new List<NgisFeature>() { line }, null);
-        var polygon = res.First().AffectedFeatures.First(f => f.Geometry.GeometryType == "Polygon");
+        var (polygon, lines) = GetPolygonFrom(new List<string>() { "8" });
 
         output.WriteLine($"original: {polygon.Geometry}");
 
@@ -38,27 +36,24 @@ public class PolygonEditorTest : TestBase
         //ie: apply this change
         var result = PolygonEditor.EditPolygon(new EditPolygonRequest() { 
             Feature = NgisFeatureHelper.Copy(polygon), 
-            AffectedFeatures = new List<NgisFeature> { line },
+            AffectedFeatures = lines,
             EditedGeometry = geometry
         });
 
         //assert
-
+        Assert.True(result.IsValid);
         var editedPolygon = result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
 
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates[1].X + 0.00001, ((Polygon)editedPolygon.Geometry).Shell.Coordinates[1].X, 8);
         output.WriteLine($"edited:   {editedPolygon.Geometry}");
-
     }
 
     [Fact]
-    public void EditsPolygonWithOneRingAndNoOtherReferencesByRemovingPoint()
+    public void OneLineReferencedDeleteShellVertex()
     {
         //arrange        
         //build a polygon from a line
-        var line = GetExampleFeature("8");
-        var res = new PolygonCreator().CreatePolygonFromLines(new List<NgisFeature>() { line }, null);
-        var polygon = res.First().AffectedFeatures.First(f => f.Geometry.GeometryType == "Polygon");
+        var (polygon, lines) = GetPolygonFrom(new List<string>() { "8" });
 
         output.WriteLine($"original: {polygon.Geometry}");
 
@@ -72,25 +67,23 @@ public class PolygonEditorTest : TestBase
         var result = PolygonEditor.EditPolygon(new EditPolygonRequest()
         {
             Feature = NgisFeatureHelper.Copy(polygon),
-            AffectedFeatures = new List<NgisFeature> { line },
+            AffectedFeatures = lines,
             EditedGeometry = geometry
         });
 
         //assert
-
+        Assert.True(result.IsValid);
         var editedPolygon = result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length -1, ((Polygon)editedPolygon.Geometry).Shell.Coordinates.Length);
         output.WriteLine($"edited:   {editedPolygon.Geometry}");
     }
 
     [Fact]
-    public void EditsPolygonWithOneRingAndNoOtherReferencesByAddingPoint()
+    public void OneLineReferencedAddShellVertex()
     {
         //arrange        
-        //build a polygon from a line
-        var line = GetExampleFeature("8");
-        var res = new PolygonCreator().CreatePolygonFromLines(new List<NgisFeature>() { line }, null);
-        var polygon = res.First().AffectedFeatures.First(f => f.Geometry.GeometryType == "Polygon");
+        //build a polygon from a line        
+        var (polygon, lines) = GetPolygonFrom(new List<string>() { "8" });
 
         output.WriteLine($"original: {polygon.Geometry}");
 
@@ -103,15 +96,66 @@ public class PolygonEditorTest : TestBase
         var result = PolygonEditor.EditPolygon(new EditPolygonRequest()
         {
             Feature = NgisFeatureHelper.Copy(polygon),
-            AffectedFeatures = new List<NgisFeature> { line },
+            AffectedFeatures = lines,
             EditedGeometry = geometry
         });
 
         //assert
-
+        Assert.True(result.IsValid);
         var editedPolygon = result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length +1, ((Polygon)editedPolygon.Geometry).Shell.Coordinates.Length);
         output.WriteLine($"edited:   {editedPolygon.Geometry}");
     }
 
+    [Fact]
+    public void TwoLinesReferencedEditShellVertex()
+    {
+        //arrange        
+        //build a polygon from a line
+        var (polygon, lines) = GetPolygonFrom(new List<string>() { "1", "2" });
+
+        output.WriteLine($"original: {polygon.Geometry}");
+        foreach (var line in  lines)
+        {
+            output.WriteLine($"line {NgisFeatureHelper.GetLokalId(line)}: {line.Geometry}");
+        }
+
+        //move one of the vertices of the line and create a new polygon
+        var ring = ((Polygon)polygon.Geometry).Shell.Copy().Coordinates;
+        var oldPoint = ring[1];
+        var newPoint = new Coordinate(oldPoint.X + 0.0001, oldPoint.Y);
+        ring[1] = newPoint; 
+        var geometry = new Polygon(new LinearRing(ring));
+
+        //act
+        //ie: apply this change
+        var result = PolygonEditor.EditPolygon(new EditPolygonRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(polygon),
+            AffectedFeatures = lines,
+            EditedGeometry = geometry
+        });
+
+        //assert
+
+        Assert.True(result.IsValid);
+
+        var editedPolygon = (Polygon) result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon").Geometry;
+        output.WriteLine($"edited:   {editedPolygon}");
+
+        Assert.Equal(editedPolygon.Shell.Coordinates.Length, ((Polygon)polygon.Geometry).Shell.Coordinates.Length);
+
+        Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newPoint));
+        Assert.DoesNotContain(editedPolygon.Shell.Coordinates, c => c.Equals(oldPoint));
+
+    }
+
+    private (NgisFeature, List<NgisFeature>) GetPolygonFrom(List<string> ids)
+    {
+        var lines = ids.Select(GetExampleFeature).ToList();
+        var res = new PolygonCreator().CreatePolygonFromLines(lines.ToList(), null);
+        var polygon = res.First().AffectedFeatures.First(f => f.Geometry.GeometryType == "Polygon");
+        return (polygon, lines);
+
+    }
 }
