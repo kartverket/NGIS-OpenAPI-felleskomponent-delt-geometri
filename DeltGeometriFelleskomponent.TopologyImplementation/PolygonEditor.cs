@@ -1,6 +1,5 @@
 ﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
-
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
 public static class PolygonEditor
@@ -35,16 +34,28 @@ public static class PolygonEditor
         var res = new List<EditLineRequest>();
         foreach (var pair in pairs)
         {
-            var f = referencedFeatures.FirstOrDefault(f => f.Geometry.Coordinates.Any(c2 => c2.Equals(pair.oldCoord)));
-            if (f != null) { 
-                var edit = ToEdit(pair, f);
-                edit.AffectedFeatures = new List<NgisFeature>() { editedPolygonFeature }.Concat( referencedFeatures.Where(f => NgisFeatureHelper.GetLokalId(f) != NgisFeatureHelper.GetLokalId(f))).ToList();
-                res.Add(edit);
+            NgisFeature? referencedLineFeature = null;
+            if (pair.oldCoord != null) {
+                referencedLineFeature = GetFirstFeatureWithCoordinate(pair.oldCoord, referencedFeatures);
+            } else if (pair.newCoordPrevIndex.HasValue)
+            {
+                var coord = pair.newCoordPrevIndex.Value != -1 ? ((Polygon)editedPolygonFeature.Geometry).Shell.Coordinates[pair.newCoordPrevIndex.Value] : ((Polygon)editedPolygonFeature.Geometry).Shell.Coordinates.Last();
+                referencedLineFeature = GetFirstFeatureWithCoordinate(coord, referencedFeatures);
+            }
+
+            if (referencedLineFeature != null) { 
+                var edit = ToEdit(pair, referencedLineFeature);
+                if (edit != null) { 
+                    edit.AffectedFeatures = new List<NgisFeature>() { editedPolygonFeature }.Concat( referencedFeatures.Where(f => NgisFeatureHelper.GetLokalId(f) != NgisFeatureHelper.GetLokalId(f))).ToList();
+                    res.Add(edit);
+                }
             }
         }
         return res;
     }
-     
+
+    private static NgisFeature? GetFirstFeatureWithCoordinate(Coordinate coord, IEnumerable<NgisFeature> referencedFeatures)
+        => referencedFeatures.FirstOrDefault(f => f.Geometry.Coordinates.Any(c2 => c2.Equals(coord)));
 
     private static IEnumerable<NgisFeature> GetShellFeatures(NgisFeature feature, List<NgisFeature> affectedFeatures)
     {
@@ -79,6 +90,19 @@ public static class PolygonEditor
                 }
             };
         }
+        if (pair.newCoord != null && pair.oldCoord == null && pair.newCoordPrevIndex.HasValue)
+        {
+            return new EditLineRequest()
+            {
+                Feature = feature,
+                Edit = new EditLineOperation()
+                {
+                    Operation = EditOperation.Insert,
+                    NodeValue = new List<double>() { pair.newCoord.X, pair.newCoord.Y },
+                    NodeIndex = pair.newCoordPrevIndex.Value
+                }
+            };
+        }
         return null;
     }
 
@@ -92,18 +116,31 @@ public static class PolygonEditor
 
         var pairs = new List<Pair>();
         
-            foreach (var deletedPoint in deletedPoints)
+        foreach (var deletedPoint in deletedPoints)
+        {
+            var newCoord = GetClosest(newPoints, deletedPoint);
+            pairs.Add(new Pair()
             {
-                pairs.Add(new Pair()
-                {
-                    oldCoord = deletedPoint,
-                    newCoord = GetClosest(newPoints, deletedPoint),
-                });
-            }
+                oldCoord = deletedPoint,
+                newCoord = newCoord,
+            });
+            newPoints = newPoints.Where(c => !c.Equals(newCoord));
+        }
+        foreach (var addedPoint in newPoints)
+        {
+            pairs.Add(new Pair()
+            {
+                oldCoord = null,
+                newCoord = addedPoint,
+                newCoordPrevIndex = FindIndex(newRing.Coordinates, addedPoint) - 1
+            });
+        }
 
-        
         return pairs;
     }
+
+    private static int FindIndex(Coordinate[] coordinates, Coordinate coord)
+        => Array.FindIndex(coordinates, c => c.Equals(coord));
 
     private static Coordinate? GetClosest (IEnumerable<Coordinate> points, Coordinate point)
     {
@@ -115,6 +152,7 @@ public static class PolygonEditor
     internal class Pair {
         public Coordinate? oldCoord { get; set; }
         public Coordinate? newCoord { get; set; }
+        public int? newCoordPrevIndex { get; set; }
     }
 
     
