@@ -371,6 +371,7 @@ public class PolygonEditorTest : TestBase
         Assert.Equal(Operation.Replace, editedFeature.Update.Action);
 
         Assert.True(geometry.Equals(editedPolygon));
+        Assert.False(editedPolygon.Holes[0].IsCCW);
         Assert.Equal(NgisFeatureHelper.GetLokalId(createdLines.First()), NgisFeatureHelper.GetInteriors(editedFeature)[0][0]);
     }
 
@@ -422,6 +423,7 @@ public class PolygonEditorTest : TestBase
         Assert.Equal(Operation.Replace, editedFeature.Update.Action);
 
         Assert.True(geometry.Equals(editedPolygon));
+        Assert.False(editedPolygon.Holes[0].IsCCW);
         Assert.Equal(NgisFeatureHelper.GetLokalId(createdLines.First()), NgisFeatureHelper.GetInteriors(editedFeature)[1][0]);
     }
 
@@ -470,6 +472,7 @@ public class PolygonEditorTest : TestBase
         Assert.Equal(Operation.Replace, editedFeature.Update.Action);
 
         Assert.True(geometry.Equals(editedPolygon));
+        Assert.False(editedPolygon.Holes[0].IsCCW);
         Assert.Equal($"-{NgisFeatureHelper.GetLokalId(createdLines.First())}", NgisFeatureHelper.GetInteriors(editedFeature)[0][0]);
     }
 
