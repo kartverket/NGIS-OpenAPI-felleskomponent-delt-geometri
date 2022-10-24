@@ -48,9 +48,16 @@ public class PolygonEditorTest : TestBase
 
         var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
+
+        Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedFeature));
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
+
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length, editedPolygon.Shell.Coordinates.Length);
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newVertex));
         Assert.DoesNotContain(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));
+
+        var editedLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "LineString");
+        Assert.Single(editedLines);
 
     }
 
@@ -82,9 +89,15 @@ public class PolygonEditorTest : TestBase
         Assert.True(result.IsValid);
         var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
 
+        Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedFeature));
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
+
         output.WriteLine($"edited:   {editedPolygon}");
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length - 1, editedPolygon.Shell.Coordinates.Length);
-        Assert.DoesNotContain(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));        
+        Assert.DoesNotContain(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));
+
+        var editedLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "LineString");
+        Assert.Single(editedLines);
     }
 
     [Fact]
@@ -116,9 +129,15 @@ public class PolygonEditorTest : TestBase
         Assert.True(result.IsValid);
 
         var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
+        Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedFeature));
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
+
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length + 1, editedPolygon.Shell.Coordinates.Length);
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newVertex));
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));
+
+        var editedLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "LineString");
+        Assert.Single(editedLines);
     }
 
     [Fact]
@@ -157,10 +176,16 @@ public class PolygonEditorTest : TestBase
         var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
 
+        Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedFeature));
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
+
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length, editedPolygon.Shell.Coordinates.Length);
 
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newVertex));
         Assert.DoesNotContain(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));
+
+        var editedLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "LineString");
+        Assert.Single(editedLines);
     }
 
     [Fact]
@@ -199,11 +224,15 @@ public class PolygonEditorTest : TestBase
 
         var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
-
+        Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedFeature));
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length, editedPolygon.Shell.Coordinates.Length);
 
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newVertex));
         Assert.DoesNotContain(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));
+
+        var editedLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "LineString");
+        Assert.Equal(2, editedLines.Count());
     }
 
     [Fact]
@@ -240,10 +269,15 @@ public class PolygonEditorTest : TestBase
 
         var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
+        Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedFeature));
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
 
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length - 1, editedPolygon.Shell.Coordinates.Length);
 
         Assert.DoesNotContain(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));
+
+        var editedLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "LineString");
+        Assert.Single(editedLines);
     }
 
     [Fact]
@@ -281,11 +315,15 @@ public class PolygonEditorTest : TestBase
 
         var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
         output.WriteLine($"edited:   {editedPolygon}");
-
+        Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedFeature));
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
         Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length + 1, editedPolygon.Shell.Coordinates.Length);
 
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));
         Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newVertex));
+
+        var editedLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "LineString");
+        Assert.Equal(2, editedLines.Count());
     }
 
     [Fact]

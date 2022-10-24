@@ -1,7 +1,5 @@
 ﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
-using System.Linq;
-using System.Net.NetworkInformation;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
