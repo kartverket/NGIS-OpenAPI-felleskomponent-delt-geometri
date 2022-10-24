@@ -38,25 +38,30 @@ public static class PolygonEditor
 
     private static TopologyResponse ApplyHoleEdit(HoleEdit edit)
     {
-        if (edit.Operation == EditOperation.Insert)
+        if (edit.Operation == EditOperation.Edit)
         {
-            var hole = PolygonCreator.CreateInteriorFeature(new LineString(edit.Ring.Coordinates));
 
-            var feature = AddHole(edit.Feature, hole);
-            
-            NgisFeatureHelper.SetOperation(feature, Operation.Replace);
-
-            return new TopologyResponse() { 
-                IsValid = true, 
-                AffectedFeatures = new List<NgisFeature>() { feature, hole}.Concat(edit.AffectedFeatures != null ? edit.AffectedFeatures : new List<NgisFeature>()).ToList()
-            };
         }
+        else
+        {
+            Func<HoleEdit, List<NgisFeature>> func = edit.Operation == EditOperation.Insert ? AddHole : RemoveHole;
+            return new TopologyResponse()
+            {
+                IsValid = true,
+                AffectedFeatures = func(edit).Concat(edit.AffectedFeatures != null ? edit.AffectedFeatures : new List<NgisFeature>()).ToList()
+            };
 
+        }
+       
         return new TopologyResponse() { IsValid = false, AffectedFeatures = new List<NgisFeature>() };
     }
 
-    private static NgisFeature AddHole(NgisFeature feature, NgisFeature hole)
+    private static List<NgisFeature> AddHole(HoleEdit edit)
     {
+        var hole = PolygonCreator.CreateInteriorFeature(new LineString(edit.Ring.Coordinates));
+
+        var feature = edit.Feature;
+
         var polygon = (Polygon)feature.Geometry;        
         var holes = polygon.Holes.ToList();
         var ring = new LinearRing(hole.Geometry.Coordinates);
@@ -69,7 +74,27 @@ public static class PolygonEditor
         var interiors = NgisFeatureHelper.GetInteriors(feature);
         interiors.Add(new List<string>() { $"{(reverse ? "-" : "")}{NgisFeatureHelper.GetLokalId(hole)}" });
         NgisFeatureHelper.SetInterior(feature, interiors);
-        return feature;
+        
+
+        NgisFeatureHelper.SetOperation(feature, Operation.Replace);
+        return new List<NgisFeature>() { feature, hole};
+    }
+
+    private static List<NgisFeature> RemoveHole(HoleEdit edit)
+    {
+        var feature = edit.Feature;
+        var shell = ((Polygon)feature.Geometry).Shell;
+        var holes = ((Polygon)feature.Geometry).Holes.Where(h => !h.Equals(edit.Ring)).ToArray();
+        feature.Geometry = new Polygon(shell, holes);
+
+        NgisFeatureHelper.SetOperation(feature, Operation.Replace);
+
+        var ringFeature = edit.AffectedFeatures?.FirstOrDefault(f => f.Geometry.Equals(edit.Ring));
+        var ringFeatureId = ringFeature != null ? NgisFeatureHelper.GetLokalId(ringFeature) : null;
+        var interiors = NgisFeatureHelper.GetInteriors(feature);
+
+        NgisFeatureHelper.SetInterior(feature, ringFeatureId != null ? interiors.Where(h => !h.Contains(ringFeatureId)).ToArray() : interiors);
+        return new List<NgisFeature>() { feature };
     }
 
     private static IEnumerable<EditLineRequest> GetShellEdits(EditPolygonRequest request)
@@ -109,8 +134,13 @@ public static class PolygonEditor
         }
         if (oldHoles.Count() > newHoles.Count())
         {
-            //check for removals
-            return new List<HoleEdit>();
+            return GetRingsNotIn(newHoles,oldHoles).Select(hole => new HoleEdit()
+            {
+                Operation = EditOperation.Delete,
+                Ring = hole,
+                Feature = request.Feature,
+                AffectedFeatures = request.AffectedFeatures
+            }).ToList();
         }
 
         return new List<HoleEdit>();

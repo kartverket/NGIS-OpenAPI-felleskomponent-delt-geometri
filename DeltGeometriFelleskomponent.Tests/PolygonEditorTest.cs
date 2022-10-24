@@ -372,7 +372,6 @@ public class PolygonEditorTest : TestBase
 
         Assert.True(geometry.Equals(editedPolygon));
         Assert.Equal(NgisFeatureHelper.GetLokalId(createdLines.First()), NgisFeatureHelper.GetInteriors(editedFeature)[0][0]);
-
     }
 
     [Fact]
@@ -421,7 +420,54 @@ public class PolygonEditorTest : TestBase
 
         Assert.True(geometry.Equals(editedPolygon));
         Assert.Equal($"-{NgisFeatureHelper.GetLokalId(createdLines.First())}", NgisFeatureHelper.GetInteriors(editedFeature)[0][0]);
+    }
 
+    [Fact]
+    public void RemovesHoleFromPolygon()
+    {
+        //arrange        
+        //build a polygon from a line
+        var (polygon, lines) = GetPolygonFrom(new List<string>() { "1", "2", "8" });
+
+        
+
+        output.WriteLine($"original: {polygon.Geometry}");
+        foreach (var line in lines)
+        {
+            output.WriteLine($"line {NgisFeatureHelper.GetLokalId(line)}: {line.Geometry}");
+        }
+
+        //move one of the vertices of the line and create a new polygon
+        var shell = ((Polygon)polygon.Geometry).Shell;
+        
+
+        var geometry = new Polygon(shell, new LinearRing[] {  });
+        output.WriteLine($"geometry:   {geometry}");
+        //act
+        //ie: apply this change
+        var result = PolygonEditor.EditPolygon(new EditPolygonRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(polygon),
+            AffectedFeatures = lines,
+            EditedGeometry = geometry
+        });
+
+        //assert
+
+        Assert.True(result.IsValid);
+
+
+        var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
+        output.WriteLine($"edited:   {editedPolygon}");
+
+        var createdLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Create);
+        Assert.Empty(createdLines);
+
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
+        Assert.Equal(Operation.Replace, editedFeature.Update.Action);
+
+        Assert.True(geometry.Equals(editedPolygon));
+        Assert.Empty(NgisFeatureHelper.GetInteriors(editedFeature));
     }
 
     private (NgisFeature, Polygon) GetEdited(List<NgisFeature> affectedFeatures)
