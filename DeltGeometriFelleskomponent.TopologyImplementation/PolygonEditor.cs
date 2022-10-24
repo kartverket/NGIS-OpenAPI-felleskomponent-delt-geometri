@@ -30,7 +30,7 @@ public static class PolygonEditor
     private static IEnumerable<EditLineRequest> GetShellEdits(EditPolygonRequest request)
     {
         var oldPolygon = (Polygon)request.Feature.Geometry;
-        var newPolygon = request.EditedGeometry; ;
+        var newPolygon = request.EditedGeometry;
 
         var pairs = GetPairs(oldPolygon.Shell, newPolygon.Shell);
 
@@ -122,7 +122,7 @@ public static class PolygonEditor
     }
 
     private static IEnumerable<Coordinate> GetCoordsNotIn(LinearRing a, LinearRing b) 
-        => a.Coordinates.Where(c => !b.Coordinates.Any(c2 => c.Equals(c2)));
+        => a.Coordinates[..^1].Where(c => !b.Coordinates[..^1].Any(c2 => c.Equals(c2)));
 
     private static IEnumerable<Pair> GetPairs (LinearRing oldRing, LinearRing newRing)
     {
