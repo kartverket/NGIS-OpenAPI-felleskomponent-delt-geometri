@@ -461,11 +461,11 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal(feature3References.Last(), NgisFeatureHelper.GetLokalId(feature2));
 
             var holes = NgisFeatureHelper.GetInteriors(featurePolygon);
-            Assert.Equal($"-{id3Hole1}", holes[0][0]);
-            Assert.Equal($"-{id4Hole1}", holes[0][1]);
+            Assert.Equal($"-{id3Hole1}", holes[0][1]);
+            Assert.Equal($"-{id4Hole1}", holes[0][0]);
 
-            Assert.Equal($"-{id3Hole2}", holes[1][0]);
-            Assert.Equal($"-{id4Hole2}", holes[1][1]);
+            Assert.Equal($"-{id3Hole2}", holes[1][1]);
+            Assert.Equal($"-{id4Hole2}", holes[1][0]);
         }
         
         [Fact]
@@ -475,7 +475,6 @@ namespace DeltGeometriFelleskomponent.Tests
             var affectedFeatures = GetLinesAndPolygonWhenCreatingPolygonFrom2Lines();
             var lineFeature1 = affectedFeatures.First();
             var lineFeature2 = affectedFeatures[1];
-            var polygonFeature = affectedFeatures.Last();
 
             // 2. Move a point on the referenced line
             LineString lineStringModified = (LineString)lineFeature1.Geometry.Copy();
@@ -680,7 +679,7 @@ namespace DeltGeometriFelleskomponent.Tests
 
             var editIndex = 3;
             var oldPoint = line1.Geometry.Coordinates[editIndex];
-            var newPoint = new Coordinate(10.982551574707031, 60.81545954370719);//new List<double>() {  };
+            var newPoint = new Coordinate(10.982551574707031, 60.81545954370719);
 
             var edit = new EditLineOperation()
             {
