@@ -46,7 +46,7 @@ public class PolygonEditorTest : TestBase
 
         var editedPolygon = result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
 
-        Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates[1].X + 0.00001, ((Polygon)editedPolygon.Geometry).Shell.Coordinates[1].X);
+        Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates[1].X + 0.00001, ((Polygon)editedPolygon.Geometry).Shell.Coordinates[1].X, 8);
         output.WriteLine($"edited:   {editedPolygon.Geometry}");
 
     }

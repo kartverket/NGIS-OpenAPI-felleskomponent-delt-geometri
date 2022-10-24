@@ -1,5 +1,7 @@
 ﻿using DeltGeometriFelleskomponent.Models;
 using NetTopologySuite.Geometries;
+using System.Net.NetworkInformation;
+
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
 public static class PolygonEditor
@@ -11,38 +13,37 @@ public static class PolygonEditor
         {
             throw new Exception("Can only edit polygons");
         }
+
+        var edits = GetShellEdits(request);
+
+        if (edits.Count() == 0)
+        {
+            throw new Exception("No edits found");
+        }
+        if (edits.Count() > 1)
+        {
+            throw new Exception("Multiple edits found. Not supported!");
+        }
+        return LineEditor.EditLine(edits.First());        
+    }
+
+    private static IEnumerable<EditLineRequest> GetShellEdits(EditPolygonRequest request)
+    {
         var oldPolygon = (Polygon)request.Feature.Geometry;
         var newPolygon = request.EditedGeometry; ;
 
         var pairs = GetPairs(oldPolygon.Shell, newPolygon.Shell);
-        var lines = GetShellFeatures(request.Feature, request.AffectedFeatures);
-        var edits = ToEdits(pairs, lines, request.Feature).OfType<EditLineRequest>();
 
-
-        if (edits.Count() == 1)
-        {
-            return LineEditor.EditLine(edits.First());
-        }
-
-
-        throw new NotImplementedException();
+        return ToEdits(pairs, GetShellFeatures(request.Feature, request.AffectedFeatures), request.Feature, oldPolygon.Shell).OfType<EditLineRequest>();
     }
 
-
-    private static IEnumerable<EditLineRequest> ToEdits(IEnumerable<Pair> pairs, IEnumerable<NgisFeature> referencedFeatures, NgisFeature editedPolygonFeature)
+    private static IEnumerable<EditLineRequest> ToEdits(IEnumerable<Pair> pairs, IEnumerable<NgisFeature> referencedFeatures, NgisFeature editedPolygonFeature, LinearRing ring)
     {
         var res = new List<EditLineRequest>();
         foreach (var pair in pairs)
         {
-            NgisFeature? referencedLineFeature = null;
-            if (pair.oldCoord != null) {
-                referencedLineFeature = GetFirstFeatureWithCoordinate(pair.oldCoord, referencedFeatures);
-            } else if (pair.newCoordPrevIndex.HasValue)
-            {
-                var coord = pair.newCoordPrevIndex.Value != -1 ? ((Polygon)editedPolygonFeature.Geometry).Shell.Coordinates[pair.newCoordPrevIndex.Value] : ((Polygon)editedPolygonFeature.Geometry).Shell.Coordinates.Last();
-                referencedLineFeature = GetFirstFeatureWithCoordinate(coord, referencedFeatures);
-            }
 
+            var referencedLineFeature = GetLineForEditPair(pair, referencedFeatures, ring);
             if (referencedLineFeature != null) { 
                 var edit = ToEdit(pair, referencedLineFeature);
                 if (edit != null) { 
@@ -54,18 +55,32 @@ public static class PolygonEditor
         return res;
     }
 
+    private static NgisFeature? GetLineForEditPair(Pair pair, IEnumerable<NgisFeature> referencedFeatures, LinearRing ring)
+    {        
+        if (pair.OldCoord != null)
+        {
+            return GetFirstFeatureWithCoordinate(pair.OldCoord, referencedFeatures);
+        }
+        else if (pair.NewCoordPrevIndex.HasValue)
+        {
+            var coord = pair.NewCoordPrevIndex.Value != -1 ? ring.Coordinates[pair.NewCoordPrevIndex.Value] : ring.Coordinates.Last();
+            return GetFirstFeatureWithCoordinate(coord, referencedFeatures);
+        }
+        return null;
+    }
+
     private static NgisFeature? GetFirstFeatureWithCoordinate(Coordinate coord, IEnumerable<NgisFeature> referencedFeatures)
         => referencedFeatures.FirstOrDefault(f => f.Geometry.Coordinates.Any(c2 => c2.Equals(coord)));
 
-    private static IEnumerable<NgisFeature> GetShellFeatures(NgisFeature feature, List<NgisFeature> affectedFeatures)
+    private static IEnumerable<NgisFeature> GetShellFeatures(NgisFeature feature, List<NgisFeature>? affectedFeatures)
     {
         var exteriors = NgisFeatureHelper.GetExteriors(feature).Select(NgisFeatureHelper.RemoveSign);
-        return affectedFeatures.FindAll(f => exteriors.Any(id => id == NgisFeatureHelper.GetLokalId(f)));
+        return affectedFeatures != null ? affectedFeatures.FindAll(f => exteriors.Any(id => id == NgisFeatureHelper.GetLokalId(f))) : new List<NgisFeature>();
     }
 
     private static EditLineRequest? ToEdit(Pair pair, NgisFeature feature)
     {
-        if (pair.newCoord != null && pair.oldCoord != null) { 
+        if (pair.NewCoord != null && pair.OldCoord != null) { 
 
             return new EditLineRequest()
             {
@@ -73,12 +88,12 @@ public static class PolygonEditor
                 Edit = new EditLineOperation()
                 {
                     Operation = EditOperation.Edit,
-                    NodeValue = new List<double>() { pair.newCoord.X, pair.newCoord.Y },
-                    NodeIndex = Array.FindIndex(feature.Geometry.Coordinates, c => c.Equals(pair.oldCoord))
+                    NodeValue = new List<double>() { pair.NewCoord.X, pair.NewCoord.Y },
+                    NodeIndex = FindIndex(feature.Geometry.Coordinates, pair.OldCoord)
                 }
             };
         }
-        if (pair.newCoord == null && pair.oldCoord != null)
+        if (pair.NewCoord == null && pair.OldCoord != null)
         {
             return new EditLineRequest()
             {
@@ -86,11 +101,11 @@ public static class PolygonEditor
                 Edit = new EditLineOperation()
                 {
                     Operation = EditOperation.Delete,                    
-                    NodeIndex = Array.FindIndex(feature.Geometry.Coordinates, c => c.Equals(pair.oldCoord))
+                    NodeIndex = FindIndex(feature.Geometry.Coordinates,pair.OldCoord)
                 }
             };
         }
-        if (pair.newCoord != null && pair.oldCoord == null && pair.newCoordPrevIndex.HasValue)
+        if (pair.NewCoord != null && pair.OldCoord == null && pair.NewCoordPrevIndex.HasValue)
         {
             return new EditLineRequest()
             {
@@ -98,8 +113,8 @@ public static class PolygonEditor
                 Edit = new EditLineOperation()
                 {
                     Operation = EditOperation.Insert,
-                    NodeValue = new List<double>() { pair.newCoord.X, pair.newCoord.Y },
-                    NodeIndex = pair.newCoordPrevIndex.Value
+                    NodeValue = new List<double>() { pair.NewCoord.X, pair.NewCoord.Y },
+                    NodeIndex = pair.NewCoordPrevIndex.Value
                 }
             };
         }
@@ -121,8 +136,8 @@ public static class PolygonEditor
             var newCoord = GetClosest(newPoints, deletedPoint);
             pairs.Add(new Pair()
             {
-                oldCoord = deletedPoint,
-                newCoord = newCoord,
+                OldCoord = deletedPoint,
+                NewCoord = newCoord,
             });
             newPoints = newPoints.Where(c => !c.Equals(newCoord));
         }
@@ -130,9 +145,9 @@ public static class PolygonEditor
         {
             pairs.Add(new Pair()
             {
-                oldCoord = null,
-                newCoord = addedPoint,
-                newCoordPrevIndex = FindIndex(newRing.Coordinates, addedPoint) - 1
+                OldCoord = null,
+                NewCoord = addedPoint,
+                NewCoordPrevIndex = FindIndex(newRing.Coordinates, addedPoint) - 1
             });
         }
 
@@ -146,16 +161,13 @@ public static class PolygonEditor
     {
         var res = points.Select(p => (p.Distance(point), p));
         return res.Count() > 0 ? res.Min().Item2 : null;
-
     }
 
     internal class Pair {
-        public Coordinate? oldCoord { get; set; }
-        public Coordinate? newCoord { get; set; }
-        public int? newCoordPrevIndex { get; set; }
+        public Coordinate? OldCoord { get; set; }
+        public Coordinate? NewCoord { get; set; }
+        public int? NewCoordPrevIndex { get; set; }
     }
-
-    
     
 }
 
