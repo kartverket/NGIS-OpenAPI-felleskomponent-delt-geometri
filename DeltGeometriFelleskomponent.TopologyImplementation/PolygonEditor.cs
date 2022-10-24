@@ -60,10 +60,14 @@ public static class PolygonEditor
         var polygon = (Polygon)feature.Geometry;        
         var holes = polygon.Holes.ToList();
         var ring = new LinearRing(hole.Geometry.Coordinates);
+
+        var reverse = ring.IsCCW;
+        
+
         holes.Add(ring);        
         feature.Geometry = PolygonCreator.EnsureOrdering(new Polygon(polygon.Shell, holes.ToArray()));
         var interiors = NgisFeatureHelper.GetInteriors(feature);
-        interiors.Add(new List<string>() { NgisFeatureHelper.GetLokalId(hole) });
+        interiors.Add(new List<string>() { $"{(reverse ? "-" : "")}{NgisFeatureHelper.GetLokalId(hole)}" });
         NgisFeatureHelper.SetInterior(feature, interiors);
         return feature;
     }
