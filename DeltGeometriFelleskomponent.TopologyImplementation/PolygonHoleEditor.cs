@@ -46,22 +46,15 @@ public static class PolygonHoleEditor
             var changedHoles = newHoles.Where(h => !oldHoles.Any(oh => oh.Equals(h)));
             var edits = new List<HoleEditRequest>();
             var holes = GetHoles((Polygon)request.Feature.Geometry);
-            foreach (var changedHole in changedHoles)
+
+            return GetChangedHolePairs(oldHoles, newHoles).Select(holePair => new HoleEditRequest()
             {
-                var oldHole = GetMostSimilarHole(oldHoles, changedHole);
-                oldHoles = oldHoles.Where(h => !h.Equals(oldHole)).ToArray();
-
-                edits.Add(new HoleEditRequest()
-                {
-                    Operation = EditOperation.Edit,
-                    Feature = request.Feature,
-                    AffectedFeatures = request.AffectedFeatures,
-                    Index = Array.FindIndex(holes, c => c.Equals(oldHole)),
-                    Ring = changedHole
-                });
-            }
-            return edits;
-
+                Operation = EditOperation.Edit,
+                Feature = request.Feature,
+                AffectedFeatures = request.AffectedFeatures,
+                Index = Array.FindIndex(holes, c => c.Equals(holePair.Item2)),
+                Ring = holePair.Item1
+            });
         }
         if (oldHoles.Count() < newHoles.Count())
         {
@@ -91,9 +84,27 @@ public static class PolygonHoleEditor
     private static LinearRing[] GetHoles(Polygon polygon)
         => polygon.Holes ?? new LinearRing[] { };
 
-    private static LinearRing GetMostSimilarHole(LinearRing[] candidates, LinearRing hole)
+    private static List<(LinearRing, LinearRing)> GetChangedHolePairs(LinearRing[] oldHoles, LinearRing[] newHoles)
     {
-        return candidates[0];
+        var changedHoles = newHoles.Where(h => !oldHoles.Any(oh => oh.Equals(h)));
+        var candidates = oldHoles.Where(h => !newHoles.Any(nh => nh.Equals(h)));
+
+        var list = new List<(LinearRing, LinearRing)>();
+        foreach (var changedHole in changedHoles)
+        {
+            var oldHole = GetMostSimilarHole(candidates, changedHole);
+            list.Add((changedHole, candidates.First()));
+            candidates = candidates.Where(c => !c.Equals(oldHole));
+        }
+        return list;
+
+    }
+
+    private static LinearRing GetMostSimilarHole(IEnumerable<LinearRing> candidates, LinearRing hole)
+    {
+        //here be dragons
+        //should probably compare size/position to get right hole
+        return candidates.First();
     }
 
     private static List<NgisFeature> AddHole(HoleEditRequest edit)
