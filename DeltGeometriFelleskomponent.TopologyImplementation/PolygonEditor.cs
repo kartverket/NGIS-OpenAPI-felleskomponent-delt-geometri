@@ -1,5 +1,7 @@
 ﻿using DeltGeometriFelleskomponent.Models;
+using NetTopologySuite.Algorithm;
 using NetTopologySuite.Geometries;
+using System.Drawing;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
 
@@ -40,7 +42,24 @@ public static class PolygonEditor
     {
         if (edit.Operation == EditOperation.Edit)
         {
+            if (!edit.Index.HasValue)
+            {
+                throw new Exception("Missing index");
+            }
+            
+            var feature = edit.Feature;
+            var polygon = (Polygon)feature.Geometry;
 
+            var oldRing = polygon.Holes[edit.Index.Value];
+            var newRing = edit.Ring;
+            var pairs = GetPairs(oldRing, newRing);
+            var edits = ToEdits(pairs, GetFeaturesReferencedByPolygon(feature, edit.AffectedFeatures), feature, oldRing);
+            if (edits.Count() > 1)
+            {
+                throw new Exception("Multiple edits found. Not supported!");
+            }
+            return LineEditor.EditLine(edits.First());
+            
         }
         else
         {
@@ -104,12 +123,16 @@ public static class PolygonEditor
 
         var pairs = GetPairs(oldPolygon.Shell, newPolygon.Shell);
 
-        return ToEdits(pairs, GetShellFeatures(request.Feature, request.AffectedFeatures), request.Feature, oldPolygon.Shell).OfType<EditLineRequest>();
+        return ToEdits(pairs, GetFeaturesReferencedByPolygon(request.Feature, request.AffectedFeatures), request.Feature, oldPolygon.Shell).OfType<EditLineRequest>();
     }
 
     private static LinearRing[] GetHoles(Polygon polygon)
         => polygon.Holes ?? new LinearRing[] {};
     
+    private static LinearRing GetMostSimilarHole(LinearRing[] candidates, LinearRing hole)
+    {
+        return candidates[0];
+    }
 
     private static IEnumerable<HoleEdit> GetHoleEdits(EditPolygonRequest request)
     {
@@ -118,8 +141,25 @@ public static class PolygonEditor
 
         if (oldHoles.Count() == newHoles.Count())
         {
-            //check for edits
-            return new List<HoleEdit>();
+            var changedHoles = newHoles.Where(h => !oldHoles.Any(oh => oh.Equals(h)));
+            var edits = new List<HoleEdit>();
+            var holes = GetHoles((Polygon)request.Feature.Geometry);
+            foreach (var changedHole in changedHoles)
+            {
+                var oldHole = GetMostSimilarHole(oldHoles, changedHole);
+                oldHoles = oldHoles.Where(h => !h.Equals(oldHole)).ToArray();
+
+                edits.Add(new HoleEdit()
+                {
+                    Operation = EditOperation.Edit,
+                    Feature = request.Feature,
+                    AffectedFeatures = request.AffectedFeatures,
+                    Index = Array.FindIndex(holes, c => c.Equals(oldHole)),
+                    Ring = changedHole
+                });
+            }
+            return edits;
+
         }
         if (oldHoles.Count() < newHoles.Count())
         {
@@ -184,10 +224,10 @@ public static class PolygonEditor
     private static NgisFeature? GetFirstFeatureWithCoordinate(Coordinate coord, IEnumerable<NgisFeature> referencedFeatures)
         => referencedFeatures.FirstOrDefault(f => f.Geometry.Coordinates.Any(c2 => c2.Equals(coord)));
 
-    private static IEnumerable<NgisFeature> GetShellFeatures(NgisFeature feature, List<NgisFeature>? affectedFeatures)
+    private static IEnumerable<NgisFeature> GetFeaturesReferencedByPolygon(NgisFeature feature, List<NgisFeature>? affectedFeatures)
     {
-        var exteriors = NgisFeatureHelper.GetExteriors(feature).Select(NgisFeatureHelper.RemoveSign);
-        return affectedFeatures != null ? affectedFeatures.FindAll(f => exteriors.Any(id => id == NgisFeatureHelper.GetLokalId(f))) : new List<NgisFeature>();
+        var references = NgisFeatureHelper.GetExteriors(feature).Select(NgisFeatureHelper.RemoveSign).Concat(NgisFeatureHelper.GetInteriors(feature).SelectMany(h => h).Select(NgisFeatureHelper.RemoveSign));         
+        return affectedFeatures != null ? affectedFeatures.FindAll(f => references.Any(id => id == NgisFeatureHelper.GetLokalId(f))) : new List<NgisFeature>();
     }
 
     private static EditLineRequest? ToEdit(Pair pair, NgisFeature feature)
