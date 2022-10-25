@@ -670,6 +670,59 @@ public class PolygonEditorTest : TestBase
 
     }
 
+    [Fact]
+    public void EditsPolygonWithNeighbour()
+    {
+        //arrange        
+        //build a polygon from a line
+        var (polygon1, _) = GetPolygonFrom(new List<string>() { "1", "2" });
+        var (polygon2, _) = GetPolygonFrom(new List<string>() { "1", "5" });
+
+        output.WriteLine($"polygon1:   {polygon1.Geometry}");
+        output.WriteLine($"polygon2:   {polygon2.Geometry}");
+        var id1 = NgisFeatureHelper.GetLokalId(polygon1);
+        var id2 = NgisFeatureHelper.GetLokalId(polygon2);
+
+        var lines = new List<string>() { "1", "2", "5" }.Select(GetExampleFeature).ToList();
+
+        var affected = lines.Select(NgisFeatureHelper.Copy).ToList();
+        affected.Add(polygon2);
+
+        
+        var ring = ((Polygon)polygon1.Geometry).Shell.Copy().Coordinates;
+        var oldVertex = ring[3];
+        var newVertex = new Coordinate(oldVertex.X + 0.00001, oldVertex.Y);
+        ring[3] = newVertex;
+        var geometry = new Polygon(new LinearRing(ring));
+
+        var result = PolygonEditor.EditPolygon(new EditPolygonRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(polygon1),
+            AffectedFeatures = affected,
+            EditedGeometry = geometry
+        });
+
+        Assert.True(result.IsValid);
+
+        var editedLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "LineString");
+        Assert.Single(editedLines);
+
+        Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedLines.First()));
+
+        var editedPolygons = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "Polygon");
+        Assert.Equal(2, editedPolygons.Count());
+
+        foreach (var editedPolygon in editedPolygons)
+        {
+            Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedPolygon));
+            output.WriteLine($"edited:   {editedPolygon.Geometry}");
+        }
+
+        Assert.NotNull(result.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == id1));
+        Assert.NotNull(result.AffectedFeatures.FirstOrDefault(f => NgisFeatureHelper.GetLokalId(f) == id2));
+    }
+        
+        
     private (NgisFeature, Polygon) GetEdited(List<NgisFeature> affectedFeatures)
     {
         var editedFeature = affectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");

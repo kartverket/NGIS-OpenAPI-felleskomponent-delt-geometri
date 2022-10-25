@@ -226,8 +226,21 @@ public static class PolygonEditor
 
     private static IEnumerable<NgisFeature> GetFeaturesReferencedByPolygon(NgisFeature feature, List<NgisFeature>? affectedFeatures)
     {
-        var references = NgisFeatureHelper.GetExteriors(feature).Select(NgisFeatureHelper.RemoveSign).Concat(NgisFeatureHelper.GetInteriors(feature).SelectMany(h => h).Select(NgisFeatureHelper.RemoveSign));         
-        return affectedFeatures != null ? affectedFeatures.FindAll(f => references.Any(id => id == NgisFeatureHelper.GetLokalId(f))) : new List<NgisFeature>();
+        if (affectedFeatures == null)
+        {
+            return new List<NgisFeature>();
+        }
+
+        var directReferences = NgisFeatureHelper.GetAllReferences(feature);
+
+        var references = affectedFeatures
+            .Where(f => f.Geometry.GeometryType == "Polygon")
+            .Where(p => NgisFeatureHelper.GetAllReferences(p).Any(r => directReferences.Contains(r)))
+            .Select(p => new List<string>() {NgisFeatureHelper.GetLokalId(p) }.Concat(NgisFeatureHelper.GetAllReferences(p)))
+            .SelectMany(p => p)
+            .Concat(directReferences)
+            .Distinct();
+        return affectedFeatures.FindAll(f => references.Any(id => id == NgisFeatureHelper.GetLokalId(f)));
     }
 
     private static EditLineRequest? ToEdit(Pair pair, NgisFeature feature)
