@@ -102,9 +102,8 @@ public static class PolygonHoleEditor
 
     private static LinearRing GetMostSimilarHole(IEnumerable<LinearRing> candidates, LinearRing hole)
     {
-        //here be dragons
-        //should probably compare size/position to get right hole
-        return candidates.First();
+        var distances = candidates.Select(c => (c.Centroid.Distance(hole.Centroid), c));
+        return distances.Count() > 0 ? distances.Min().Item2 : null;
     }
 
     private static List<NgisFeature> AddHole(HoleEditRequest edit)
