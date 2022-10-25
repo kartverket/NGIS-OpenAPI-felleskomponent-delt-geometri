@@ -189,6 +189,56 @@ public class PolygonEditorTest : TestBase
     }
 
     [Fact]
+    public void TwoLinesReferencedInShellAndTwoHolesEditShellVertex()
+    {
+        //arrange        
+        //build a polygon from a line
+        var (polygon, lines) = GetPolygonFrom(new List<string>() { "1", "2", "8", "9" });
+
+        output.WriteLine($"original: {polygon.Geometry}");
+        foreach (var line in lines)
+        {
+            output.WriteLine($"line {NgisFeatureHelper.GetLokalId(line)}: {line.Geometry}");
+        }
+
+        //move one of the vertices of the line and create a new polygon
+        var ring = ((Polygon)polygon.Geometry).Shell.Copy().Coordinates;
+        var oldVertex = ring[1];
+        var newVertex = new Coordinate(oldVertex.X + 0.0001, oldVertex.Y);
+        ring[1] = newVertex;
+        var geometry = new Polygon(new LinearRing(ring), ((Polygon)polygon.Geometry).Holes);
+
+        //act
+        //ie: apply this change
+        var result = PolygonEditor.EditPolygon(new EditPolygonRequest()
+        {
+            Feature = NgisFeatureHelper.Copy(polygon),
+            AffectedFeatures = lines,
+            EditedGeometry = geometry
+        });
+
+        //assert
+
+        Assert.True(result.IsValid);
+
+        var (editedFeature, editedPolygon) = GetEdited(result.AffectedFeatures);
+        output.WriteLine($"edited:   {editedPolygon}");
+
+        Assert.Equal(Operation.Replace, NgisFeatureHelper.GetOperation(editedFeature));
+        Assert.Equal(id, NgisFeatureHelper.GetLokalId(editedFeature));
+
+        Assert.Equal(((Polygon)polygon.Geometry).Shell.Coordinates.Length, editedPolygon.Shell.Coordinates.Length);
+
+        Assert.Contains(editedPolygon.Shell.Coordinates, c => c.Equals(newVertex));
+        Assert.DoesNotContain(editedPolygon.Shell.Coordinates, c => c.Equals(oldVertex));
+
+        Assert.Equal(2, editedPolygon.Holes.Count());
+
+        var editedLines = result.AffectedFeatures.Where(f => f.Update?.Action == Operation.Replace && f.Geometry.GeometryType == "LineString");
+        Assert.Single(editedLines);
+    }
+
+    [Fact]
     public void TwoLinesReferencedEditFirstShellVertex()
     {
         //arrange        
