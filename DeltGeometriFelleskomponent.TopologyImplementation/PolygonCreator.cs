@@ -145,12 +145,15 @@ public class PolygonCreator
 
     private static IEnumerable<FeatureWithDirection> GetOrientedFeatures(Geometry ring, IEnumerable<NgisFeature> candidates)
     {
+        /*
         //there is something wrong going on related to presicion
         //writing and reading wkt fixes this, but this is a hack, I know. But this should work for now...
         var w = new WKTWriter();
         var r = new WKTReader();
         var references = candidates.Where(candidate => r.Read(w.Write(candidate.Geometry)).CoveredBy(ring));
-       
+        */
+        var references = candidates.Where(candidate => candidate.Geometry.CoveredBy(ring));
+
         var coords = ring.Coordinates;
         var first = references.FirstOrDefault(r => r.Geometry.Coordinates[0].Equals(coords[0]) && r.Geometry.Coordinates[1].Equals(coords[1]) );
 

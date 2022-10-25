@@ -37,6 +37,9 @@
     <None Update="Examples\complex_geometries_example.geojson">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Examples\edit_line_request_with_presicion_issues.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Examples\example_geometries.geojson">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

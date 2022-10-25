@@ -1,0 +1,565 @@
+﻿{
+  "edit": {
+    "operation": "Edit",
+    "nodeIndex": 0,
+    "nodeValue": [
+      10.942039489746094,
+      60.85061775554481
+    ]
+  },
+  "feature": {
+    "type": "Feature",
+    "geometry": {
+      "type": "LineString",
+      "coordinates": [
+        [
+          10.94332695,
+          60.85178833
+        ],
+        [
+          10.94552708,
+          60.84978236
+        ]
+      ]
+    },
+    "properties": {
+      "identifikasjon": {
+        "lokalId": "239848d3-9a03-418b-898f-69efa45e4c11"
+      }
+    }
+  },
+  "affectedFeatures": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.943735,
+            60.854412
+          ],
+          [
+            10.947747,
+            60.852499
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "89c71bd0-3376-46eb-b6ff-958dd8064334"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.947747,
+            60.852499
+          ],
+          [
+            10.948799,
+            60.849729
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "5aef333c-f046-4be1-9d16-6f2dc7408707"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.948799,
+            60.849729
+          ],
+          [
+            10.945816,
+            60.848475
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "eb6e1176-aba4-44d1-8c8c-929b56701be3"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.945816,
+            60.848475
+          ],
+          [
+            10.93998,
+            60.848141
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "96ac699c-44cf-4180-8c2a-a20b24b68c48"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.93882084,
+            60.8508895
+          ],
+          [
+            10.943735,
+            60.854412
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "8d0f8bc7-7383-4e07-b247-9e4be72c1cb4"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.93703985,
+            60.85052369
+          ],
+          [
+            10.93882084,
+            60.8508895
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "8a454969-03f4-48f8-b445-274cce15b62f"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.94552708,
+            60.84978236
+          ],
+          [
+            10.948799,
+            60.849729
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "ea67d4c6-d4e1-4cda-989b-fa3f0ff71de6"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.94552708,
+            60.84978236
+          ],
+          [
+            10.945816,
+            60.848475
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "10225fbb-c924-4fe1-9da6-71054f40d26e"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.93924999,
+            60.84958301
+          ],
+          [
+            10.93998,
+            60.848141
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "3d643f3a-17ff-4fe9-a45e-0cb0f34a68b5"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.93924999,
+            60.84958301
+          ],
+          [
+            10.93703985,
+            60.85052369
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "8d005937-384b-4fc9-8aae-9a8e6a65c611"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.94552708,
+            60.84978236
+          ],
+          [
+            10.94231844,
+            60.84944713
+          ],
+          [
+            10.93924999,
+            60.84958301
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "cfe0e792-5320-40a1-aa00-9def7841663e"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.94332695,
+            60.85178833
+          ],
+          [
+            10.947747,
+            60.852499
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "bf0f8035-88c5-4bbc-aed5-898a26c6ee87"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            10.93882084,
+            60.8508895
+          ],
+          [
+            10.94332695,
+            60.85178833
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "5b22a1de-ed10-4809-81da-c9bd2fea2bb8"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.94552708,
+              60.84978236
+            ],
+            [
+              10.945816,
+              60.848475
+            ],
+            [
+              10.948799,
+              60.849729
+            ],
+            [
+              10.94552708,
+              60.84978236
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "8be76ed6-a45d-4ef5-9562-761804106569"
+        }
+      },
+      "geometry_properties": {
+        "position": [
+          10.946714028171677,
+          60.84932878675527
+        ],
+        "exterior": [
+          "10225fbb-c924-4fe1-9da6-71054f40d26e",
+          "-eb6e1176-aba4-44d1-8c8c-929b56701be3",
+          "-ea67d4c6-d4e1-4cda-989b-fa3f0ff71de6"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.93924999,
+              60.84958301
+            ],
+            [
+              10.93998,
+              60.848141
+            ],
+            [
+              10.945816,
+              60.848475
+            ],
+            [
+              10.94552708,
+              60.84978236
+            ],
+            [
+              10.94231844,
+              60.84944713
+            ],
+            [
+              10.93924999,
+              60.84958301
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "4e749c27-4ddc-4ea8-9b63-3698f3ab47d7"
+        }
+      },
+      "geometry_properties": {
+        "position": [
+          10.94260573022113,
+          60.848942948792306
+        ],
+        "exterior": [
+          "3d643f3a-17ff-4fe9-a45e-0cb0f34a68b5",
+          "-96ac699c-44cf-4180-8c2a-a20b24b68c48",
+          "-10225fbb-c924-4fe1-9da6-71054f40d26e",
+          "cfe0e792-5320-40a1-aa00-9def7841663e"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.943735,
+              60.854412
+            ],
+            [
+              10.93882084,
+              60.8508895
+            ],
+            [
+              10.93882084,
+              60.8508895
+            ],
+            [
+              10.94332695,
+              60.85178833
+            ],
+            [
+              10.947747,
+              60.852499
+            ],
+            [
+              10.943735,
+              60.854412
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "f52c60cc-25b4-4c50-83fc-c8deaaabe369"
+        }
+      },
+      "geometry_properties": {
+        "position": [
+          10.9434388843843,
+          60.85262977179047
+        ],
+        "exterior": [
+          "-8d0f8bc7-7383-4e07-b247-9e4be72c1cb4",
+          "5b22a1de-ed10-4809-81da-c9bd2fea2bb8",
+          "bf0f8035-88c5-4bbc-aed5-898a26c6ee87",
+          "-89c71bd0-3376-46eb-b6ff-958dd8064334"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.947747,
+              60.852499
+            ],
+            [
+              10.94332695,
+              60.85178833
+            ],
+            [
+              10.94552708,
+              60.84978236
+            ],
+            [
+              10.94552708,
+              60.84978236
+            ],
+            [
+              10.948799,
+              60.849729
+            ],
+            [
+              10.947747,
+              60.852499
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "3768d599-b2f3-45c2-8608-79af3ec893d3"
+        }
+      },
+      "geometry_properties": {
+        "position": [
+          10.946378917602049,
+          60.851038469289826
+        ],
+        "exterior": [
+          "-bf0f8035-88c5-4bbc-aed5-898a26c6ee87",
+          "239848d3-9a03-418b-898f-69efa45e4c11",
+          "ea67d4c6-d4e1-4cda-989b-fa3f0ff71de6",
+          "-5aef333c-f046-4be1-9d16-6f2dc7408707"
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.93703985,
+              60.85052369
+            ],
+            [
+              10.93924999,
+              60.84958301
+            ],
+            [
+              10.94231844,
+              60.84944713
+            ],
+            [
+              10.94552708,
+              60.84978236
+            ],
+            [
+              10.94552708,
+              60.84978236
+            ],
+            [
+              10.94332695,
+              60.85178833
+            ],
+            [
+              10.93882084,
+              60.8508895
+            ],
+            [
+              10.93703985,
+              60.85052369
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "9e4a8808-a90d-49e8-8026-a7cb1ce50251"
+        }
+      },
+      "geometry_properties": {
+        "position": [
+          10.941614419519057,
+          60.85042936468945
+        ],
+        "exterior": [
+          "-8d005937-384b-4fc9-8aae-9a8e6a65c611",
+          "-cfe0e792-5320-40a1-aa00-9def7841663e",
+          "-239848d3-9a03-418b-898f-69efa45e4c11",
+          "-5b22a1de-ed10-4809-81da-c9bd2fea2bb8",
+          "-8a454969-03f4-48f8-b445-274cce15b62f"
+        ]
+      }
+    }
+  ]
+}
