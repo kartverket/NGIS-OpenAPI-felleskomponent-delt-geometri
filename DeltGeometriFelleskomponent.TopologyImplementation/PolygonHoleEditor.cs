@@ -1,4 +1,5 @@
 ﻿using DeltGeometriFelleskomponent.Models;
+using DeltGeometriFelleskomponent.Models.Exceptions;
 using NetTopologySuite.Geometries;
 using static DeltGeometriFelleskomponent.TopologyImplementation.PolygonEditor;
 
@@ -12,7 +13,7 @@ public static class PolygonHoleEditor
         {
             if (!edit.Index.HasValue)
             {
-                throw new Exception("Missing index");
+                throw new BadRequestException("Missing index");
             }
 
             var feature = edit.Feature;
@@ -23,7 +24,7 @@ public static class PolygonHoleEditor
             var edits = CreateEditLineRequests(GetChangesToRing(oldRing, newRing), GetFeaturesReferencedByPolygon(feature, edit.AffectedFeatures), feature, oldRing);
             if (edits.Count() > 1)
             {
-                throw new Exception("Multiple edits found. Not supported!");
+                throw new BadRequestException("Multiple edits found. Not supported!");
             }
             return LineEditor.EditLine(edits.First());
 

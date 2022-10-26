@@ -1,4 +1,5 @@
 ﻿using DeltGeometriFelleskomponent.Models;
+using DeltGeometriFelleskomponent.Models.Exceptions;
 using NetTopologySuite.Geometries;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
@@ -64,7 +65,7 @@ public class TopologyImplementation : ITopologyImplementation
         var referredFeatures = new List<NgisFeature>();
         if (feature.Geometry_Properties == null)
         {
-            throw new Exception("Missing Geometry_Properties on feature");
+            throw new BadRequestException("Missing Geometry_Properties on feature");
         }
 
         var holes = feature.Geometry_Properties?.Interiors?.SelectMany(i => i);
@@ -77,7 +78,7 @@ public class TopologyImplementation : ITopologyImplementation
             }
             else
             {
-                throw new Exception("Referred feature not present in AffectedFeatures");
+                throw new BadRequestException("Referred feature not present in AffectedFeatures");
             }
         }
 

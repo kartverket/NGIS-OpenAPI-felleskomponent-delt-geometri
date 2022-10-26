@@ -1,4 +1,5 @@
 ﻿using DeltGeometriFelleskomponent.Models;
+using DeltGeometriFelleskomponent.Models.Exceptions;
 using NetTopologySuite.Geometries;
 
 namespace DeltGeometriFelleskomponent.TopologyImplementation;
@@ -10,7 +11,7 @@ public static class PolygonEditor
 
         if (request.Feature.Geometry.GeometryType != "Polygon")
         {
-            throw new Exception("Can only edit polygons");
+            throw new BadRequestException("Can only edit polygons");
         }
 
         var shellEdits = GetShellEdits(request);
@@ -20,11 +21,11 @@ public static class PolygonEditor
 
         if (editCount == 0)
         {
-            throw new Exception("No edits found");
+            throw new BadRequestException("No edits found");
         }
         if (editCount > 1)
         {
-            throw new Exception("Multiple edits found. Not supported!");
+            throw new BadRequestException("Multiple edits found. Not supported!");
         }
 
         return shellEdits.Count() > 0
