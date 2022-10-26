@@ -323,7 +323,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             var element = (LineString)geom;
             if (element.Count < 3)
             {
-                throw new BadRequestException("LineString must contain at least 3 points");
+                throw new InvalidOperationException("LineString must contain at least 3 points");
             }
             var oldSeq = element.CoordinateSequence;
             var newSeq = element.Factory.CoordinateSequenceFactory.Create(
