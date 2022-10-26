@@ -46,7 +46,7 @@ app.UseSwaggerUi3(c =>
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
+app.UseExceptionHandler("/error"); // Add this
 app.MapControllers();
 
 app.Run();

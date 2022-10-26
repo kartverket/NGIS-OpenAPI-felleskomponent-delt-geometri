@@ -1,4 +1,5 @@
 ﻿using DeltGeometriFelleskomponent.Models;
+﻿using DeltGeometriFelleskomponent.Models.Exceptions;
 using NetTopologySuite.Geometries;
 
 
@@ -12,7 +13,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
         {
             if (request.Feature.Geometry.GeometryType != "LineString")
             {
-                throw new ArgumentException("Can only edit line features");
+                throw new BadRequestException("Can only edit line features");
             }
 
             //apply the edit, get back all features directly affected
@@ -72,7 +73,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
         private static void SetEditOperationAndNodeInfo(EditLineRequest request)
         {
             if (request.NewFeature == null) {
-                if (request.Edit == null) throw new Exception("Edit operation required if NewFeature not set.");
+                if (request.Edit == null) throw new BadRequestException("Edit operation required if NewFeature not set.");
                 return;
             }
 
@@ -103,7 +104,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
 
                 SetNodeInfo(request.Edit, missingOrMovedCoordinates.First(), request.Feature);
             }
-            else throw new Exception("No difference detected between geometries");
+            else throw new BadRequestException("No difference detected between geometries");
         }
 
         private static void SetDifference(EditLineRequest request)
@@ -132,7 +133,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
                     }
                 default:
                     {
-                        throw new Exception("Operation not supported");
+                        throw new BadRequestException($"Operation {request.Edit.Operation} not supported");
                     }
             }
         }
@@ -276,7 +277,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
         {
             if (newValue == null)
             {
-                throw new Exception("Missing Coordinate value");
+                throw new BadRequestException("Missing Coordinate value");
             }
 
             var currentCoordinate = line[index].CoordinateValue;
@@ -288,7 +289,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
         {
             if (newPoint == null)
             {
-                throw new Exception("Missing Coordinate value");
+                throw new BadRequestException("Missing Coordinate value");
             }
 
             var element = (LineString)geom;
@@ -320,7 +321,7 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             var element = (LineString)geom;
             if (element.Count < 3)
             {
-                throw new InvalidOperationException();
+                throw new BadRequestException("LineString must contain at least 3 points");
             }
             var oldSeq = element.CoordinateSequence;
             var newSeq = element.Factory.CoordinateSequenceFactory.Create(
