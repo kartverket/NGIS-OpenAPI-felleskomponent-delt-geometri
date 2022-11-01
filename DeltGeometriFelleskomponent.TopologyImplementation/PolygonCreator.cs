@@ -1,4 +1,5 @@
 ﻿using DeltGeometriFelleskomponent.Models;
+using DeltGeometriFelleskomponent.Models.Exceptions;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
 using NetTopologySuite.Operation.Polygonize;
@@ -126,7 +127,7 @@ public class PolygonCreator
         return interiorFeatures;
     }
 
-    private static NgisFeature CreateInteriorFeature(LineString ring)
+    public static NgisFeature CreateInteriorFeature(LineString ring)
     {
         var interiorFeature = NgisFeatureHelper.CreateFeature(ring);
         NgisFeatureHelper.SetOperation(interiorFeature, Operation.Create);
@@ -177,7 +178,7 @@ public class PolygonCreator
         {
             return new FeatureWithDirection { Feature = reversed, IsReversed = true };
         }
-        throw new Exception("should not happen!");
+        throw new ExceptionWithHttpStatusCode("Unable to build polygon!", System.Net.HttpStatusCode.InternalServerError);
     }
 
     private static bool StartsAtPosition(Coordinate[] coords, int index, Geometry line)

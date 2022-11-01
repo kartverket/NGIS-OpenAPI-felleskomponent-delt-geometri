@@ -7,4 +7,5 @@ public interface ITopologyImplementation
     TopologyResponse CreateGeometry(CreateGeometryRequest request);
     IEnumerable<TopologyResponse> CreatePolygonsFromLines(CreatePolygonFromLinesRequest request);
     TopologyResponse EditLine(EditLineRequest request);
+    TopologyResponse EditPolygon(EditPolygonRequest request);
 }

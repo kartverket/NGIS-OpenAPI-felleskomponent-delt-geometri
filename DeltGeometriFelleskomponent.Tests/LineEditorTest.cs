@@ -8,7 +8,7 @@ using Xunit.Abstractions;
 
 namespace DeltGeometriFelleskomponent.Tests;
 
-public class GeometryEditTest : TestBase
+public class LineEditorTest : TestBase
 {
     private readonly NgisFeature LineFeature = new()
     {
@@ -86,7 +86,7 @@ public class GeometryEditTest : TestBase
 
     private readonly ITestOutputHelper output;
 
-    public GeometryEditTest(ITestOutputHelper output)
+    public LineEditorTest(ITestOutputHelper output)
     {
         // Capturing output in unit tests
         this.output = output;
@@ -95,7 +95,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void DeletesNodeOnLine()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -114,7 +114,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex0()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -134,7 +134,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex1()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -155,7 +155,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex2()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -177,7 +177,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex3()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -202,7 +202,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void DeletesNodeOnLineWithWithNewFeature()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -221,7 +221,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex0WithNewFeature()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -240,7 +240,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex1WithNewFeature()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -261,7 +261,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex2WithOldFeature()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -283,7 +283,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex3WithOldFeature()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -304,7 +304,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void MovesNodeOnLineIndex2WithOldFeature()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             AffectedFeatures = new List<NgisFeature>(),
             Feature = NgisFeatureHelper.Copy(LineFeature),
@@ -326,7 +326,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void DeletesNodeOnLineWithWithNewFeatureSansEdit()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             Feature = NgisFeatureHelper.Copy(LineFeature),
             NewFeature = NgisFeatureHelper.Copy(LineFeatureSans1)
@@ -340,7 +340,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex0WithNewFeatureSansEdit()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             Feature = NgisFeatureHelper.Copy(LineFeature),
             NewFeature = NgisFeatureHelper.Copy(LineFeatureNew0)
@@ -354,7 +354,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex1WithNewFeatureSansEdit()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             Feature = NgisFeatureHelper.Copy(LineFeature),
             NewFeature = NgisFeatureHelper.Copy(LineFeatureNew1)
@@ -370,7 +370,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex2WithOldFeatureSansEdit()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             Feature = NgisFeatureHelper.Copy(LineFeature),
             NewFeature = NgisFeatureHelper.Copy(LineFeatureNew2),
@@ -387,7 +387,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void InsertsNodeOnLineIndex3WithOldFeatureSansEdit()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             Feature = NgisFeatureHelper.Copy(LineFeature),
             NewFeature = NgisFeatureHelper.Copy(LineFeatureNew3)
@@ -403,7 +403,7 @@ public class GeometryEditTest : TestBase
     [Fact]
     public void MovesNodeOnLineIndex2WithOldFeatureSansEdit()
     {
-        var res = GeometryEdit.EditObject(new EditLineRequest()
+        var res = LineEditor.EditObject(new EditLineRequest()
         {
             Feature = NgisFeatureHelper.Copy(LineFeature),
             NewFeature = NgisFeatureHelper.Copy(LineFeatureMoved2)

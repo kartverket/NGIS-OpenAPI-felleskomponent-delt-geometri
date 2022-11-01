@@ -140,7 +140,13 @@ public static class NgisFeatureHelper
         {
             props.Add("identifikasjon",new AttributesTable());
         }
-        ((IAttributesTable)props["identifikasjon"]).Add("lokalId", lokalId);
+        var id = ((AttributesTable)props["identifikasjon"]);
+        if (!id.Exists("lokalId")) { 
+            id.Add("lokalId", lokalId);
+        } else
+        {
+            id["lokalId"] = lokalId;   
+        }
 
         feature.Properties = props;
         
