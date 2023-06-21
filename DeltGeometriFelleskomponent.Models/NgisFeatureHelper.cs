@@ -42,6 +42,18 @@ public static class NgisFeatureHelper
             })
         };
 
+    private static readonly string ReferencesPrefix = "avgrensesAv";
+
+    public static void SetBoundsReferences(NgisFeature feature, List<BoundsReference> references, string name)
+    {
+        feature.Properties.Add($"{ReferencesPrefix}{name}", references);
+    }
+
+    public static List<BoundsReference> GetBoundsReferences(NgisFeature feature)
+        => feature.Properties.GetNames().Where(key => key.StartsWith(ReferencesPrefix))
+            .SelectMany(key => (List<BoundsReference>) feature.Properties[key]).ToList();
+    
+
     public static NgisFeature CreateFeature(Geometry geometry, string? lokalId, Operation operation)
     {
         var feature = CreateFeature(geometry, lokalId);
@@ -154,5 +166,7 @@ public static class NgisFeatureHelper
 
     public static string RemoveSign(string reference)
         => reference.StartsWith("-") ? reference[1..] : reference;
+
+
 
 }
