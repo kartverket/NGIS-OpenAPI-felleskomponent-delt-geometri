@@ -108,19 +108,24 @@
             ]
         },
         "properties": {
-            "identifikasjon": {
-                "lokalId": "f946043d-2c4b-4278-b1ac-6eb8073daac1"
+          "identifikasjon": {
+            "lokalId": "f946043d-2c4b-4278-b1ac-6eb8073daac1"
+          },
+          "avgrensesAvEnFeatureType": [
+            {
+              "lokalId": "02999bcc-fe82-4ce6-8a2e-6f01aeac0b8a",
+              "featuretype": "EnFeatureType",
+              "reverse": false,
+              "idx": [ 0, 0, 0 ]
+            },
+            {
+              "lokalId": "1c854251-4a5c-45f3-b21f-efb905299649",
+              "featuretype": "EnFeatureType",
+              "reverse": true,
+              "idx": [ 0, 0, 1 ]
             }
-        },
-        "geometry_properties": {
-            "position": [
-                10.970605193741308,
-                60.81892572237736
-            ],
-            "exterior": [
-                "02999bcc-fe82-4ce6-8a2e-6f01aeac0b8a",
-                "-1c854251-4a5c-45f3-b21f-efb905299649"
-            ]
+          ]
+
         }
     },
     {
@@ -152,20 +157,24 @@
                 ]
             ]
         },
-        "properties": {
-            "identifikasjon": {
-                "lokalId": "a018176a-9a1b-4553-a3f5-a80400c24c87"
-            }
+      "properties": {
+        "identifikasjon": {
+          "lokalId": "a018176a-9a1b-4553-a3f5-a80400c24c87"
         },
-        "geometry_properties": {
-            "position": [
-                10.968521269157982,
-                60.8136247296204
-            ],
-            "exterior": [
-                "-02999bcc-fe82-4ce6-8a2e-6f01aeac0b8a",
-                "0bcfc672-b215-4393-857e-d6a94418a4d8"
-            ]
-        }
+        "avgrensesAvEnFeatureType": [
+          {
+            "lokalId": "02999bcc-fe82-4ce6-8a2e-6f01aeac0b8a",
+            "featuretype": "EnFeatureType",
+            "reverse": true,
+            "idx": [ 0, 0, 0 ]
+          },
+          {
+            "lokalId": "0bcfc672-b215-4393-857e-d6a94418a4d8",
+            "featuretype": "EnFeatureType",
+            "reverse": false,
+            "idx": [ 0, 0, 1 ]
+          }
+        ]
+      }
     }
 ]

@@ -43,10 +43,11 @@ public class CreatePolygonTest: TestBase
         //make sure properties are kept
         Assert.Equal("test", polygon.Properties.GetOptionalValue("test"));
 
+        var exteriors = ReferenceHelper.GetExteriorReferences(polygon);
         //make sure the polygon references the line
-        Assert.Single(polygon.Geometry_Properties!.Exterior);
-        Assert.Null(polygon.Geometry_Properties!.Interiors);
-        Assert.Equal(NgisFeatureHelper.GetLokalId(linestring), polygon.Geometry_Properties!.Exterior.First());
+        Assert.Single(exteriors);
+        Assert.Empty(ReferenceHelper.GetInteriorReferences(polygon));
+        Assert.Equal(NgisFeatureHelper.GetLokalId(linestring), exteriors.First().LokalId);
 
         //make sure that the linestring doesn't have any references
         Assert.Null(linestring.Geometry_Properties);
@@ -86,12 +87,14 @@ public class CreatePolygonTest: TestBase
         Assert.Equal("test", polygon.Properties.GetOptionalValue("test"));
 
         //make sure the polygon references the lines
-        Assert.Single(polygon.Geometry_Properties!.Exterior);
-        Assert.Equal(NgisFeatureHelper.GetLokalId(linestring1), polygon.Geometry_Properties!.Exterior.First());
+        var exterior = ReferenceHelper.GetExteriorReferences(polygon);
+        Assert.Single(exterior);
+        Assert.Equal(NgisFeatureHelper.GetLokalId(linestring1), exterior.First().LokalId);
 
-        Assert.Single(polygon.Geometry_Properties!.Interiors!);
-        Assert.Single(polygon.Geometry_Properties!.Interiors!.First());
-        Assert.Equal(NgisFeatureHelper.GetLokalId(linestring2), polygon.Geometry_Properties!.Interiors!.First().First());
+        var interiors = ReferenceHelper.GetInteriorReferences(polygon);
+        Assert.Single(interiors);
+        Assert.Single(interiors.First());
+        Assert.Equal(NgisFeatureHelper.GetLokalId(linestring2), interiors.First().First().LokalId);
 
         //make sure that the linestrings doesn't have any references
         Assert.Null(linestring1.Geometry_Properties);
@@ -110,12 +113,14 @@ public class CreatePolygonTest: TestBase
 
         Assert.NotNull(polygon);
 
-        var references = polygon.Geometry_Properties.Exterior;
+        var exteriors = ReferenceHelper.GetExteriorReferences(polygon!);
 
-        Assert.Equal("e8669bf0-430b-4a3b-b903-eed024453116", references[0]);
-        Assert.Equal("-91bf85e6-1909-4c36-937d-a95a046189ef", references[1]);
-        Assert.Equal("-90bad013-f611-46f5-bb59-d60eb9552d0e", references[2]);
-
+        Assert.Equal("e8669bf0-430b-4a3b-b903-eed024453116", exteriors[0].LokalId);
+        Assert.False(exteriors[0].Reverse);
+        Assert.Equal("91bf85e6-1909-4c36-937d-a95a046189ef", exteriors[1].LokalId);
+        Assert.True(exteriors[1].Reverse);
+        Assert.Equal("90bad013-f611-46f5-bb59-d60eb9552d0e", exteriors[2].LokalId);
+        Assert.True(exteriors[2].Reverse);
     }
 
 

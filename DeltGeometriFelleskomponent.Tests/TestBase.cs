@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DeltGeometriFelleskomponent.Api.Util;
 using DeltGeometriFelleskomponent.Models;
+using DeltGeometriFelleskomponent.TopologyImplementation;
 using NetTopologySuite.Features;
 
 

@@ -223,12 +223,12 @@ namespace DeltGeometriFelleskomponent.Tests
             Assert.Equal(Operation.Create, NgisFeatureHelper.GetOperation(feature1));
 
 
-            var feature3References = NgisFeatureHelper.GetExteriors(featurePolygon);
+            var feature3References = ReferenceHelper.GetExteriorReferences(featurePolygon);
             Assert.Equal(2, feature3References.Count);
-            Assert.Equal(feature3References.ElementAt(1), NgisFeatureHelper.GetLokalId(feature1));
+            Assert.Equal( NgisFeatureHelper.GetLokalId(feature1), feature3References.ElementAt(1).LokalId);
 
-            //we disregard the direction of the reference here, since I cannot wrap my head around this test
-            Assert.Equal(NgisFeatureHelper.RemoveSign(feature3References.Last()), NgisFeatureHelper.GetLokalId(feature1));
+         
+            Assert.Equal( NgisFeatureHelper.GetLokalId(feature1), feature3References.Last().LokalId);
 
             if (insideCheck)
             {
@@ -414,13 +414,19 @@ namespace DeltGeometriFelleskomponent.Tests
                 var interiors = new List<List<string>>();
                 interiors.Add(new List<string>() { id3Hole1, id4Hole1 });
                 interiors.Add(new List<string>() { id3Hole2, id4Hole2 });
+
+                var affectedFeatures = new List<NgisFeature>()
+                {
+                    lineFeature, lineFeature2, lineFeature1Hole1, lineFeature2Hole1, lineFeature1Hole2,
+                    lineFeature2Hole2
+                };
                 // specify bpthh exterior and interior
-                feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, interiors);              
+                feature = NgisFeatureHelper.CreateFeature(new Polygon(null), null, Operation.Create, new List<string>() { id, id2 }, interiors, affectedFeatures);              
                 res = _topologyImplementation.CreateGeometry(new CreateGeometryRequest()
                 {
                     Feature = feature,
                     
-                    AffectedFeatures = new List<NgisFeature>() { lineFeature, lineFeature2, lineFeature1Hole1, lineFeature2Hole1, lineFeature1Hole2, lineFeature2Hole2 }
+                    AffectedFeatures = affectedFeatures
 
                 });
             }

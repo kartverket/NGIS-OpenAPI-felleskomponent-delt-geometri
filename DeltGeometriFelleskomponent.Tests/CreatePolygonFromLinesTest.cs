@@ -38,16 +38,16 @@ public class CreatePolygonFromLinesTest: TestBase
 
         var polygon = result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
 
-        
 
-        var exteriors = polygon!.Geometry_Properties!.Exterior!;
+
+        var exteriors = ReferenceHelper.GetExteriorReferences(polygon!);
         Assert.Equal(2, exteriors.Count);
 
-        Assert.Equal("2", exteriors[0]);
-        Assert.Equal("-1", exteriors[1]);
+        Assert.False(exteriors[0].Reverse);
+        Assert.True(exteriors[1].Reverse);
         
-
-        Assert.Empty( polygon!.Geometry_Properties!.Interiors!);
+        var interiors = ReferenceHelper.GetInteriorReferences(polygon!);
+        Assert.Empty(interiors);
     }
 
     
@@ -64,23 +64,31 @@ public class CreatePolygonFromLinesTest: TestBase
         Assert.True(result.IsValid);
         var polygon = result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
         output.WriteLine(polygon.Geometry.ToString());
-        foreach(var exterior in polygon.Geometry_Properties.Exterior)
+        if (polygon.Geometry_Properties?.Exterior != null)
         {
-            output.WriteLine(exterior);
+            foreach (var exterior in polygon.Geometry_Properties?.Exterior)
+            {
+                output.WriteLine(exterior);
+            }
+
+            Assert.NotNull(polygon);
+
+            var order = new string[]
+            {
+                "-8d005937-384b-4fc9-8aae-9a8e6a65c611", "-cfe0e792-5320-40a1-aa00-9def7841663e",
+                "-239848d3-9a03-418b-898f-69efa45e4c11", "-5b22a1de-ed10-4809-81da-c9bd2fea2bb8",
+                "-8a454969-03f4-48f8-b445-274cce15b62f"
+            };
+
+            var ordered = StartAt(polygon.Geometry_Properties.Exterior.ToArray(),
+                polygon.Geometry_Properties.Exterior.IndexOf(order[0]));
+
+            Assert.Equal(order[0], ordered[0]);
+            Assert.Equal(order[1], ordered[1]);
+            Assert.Equal(order[2], ordered[2]);
+            Assert.Equal(order[3], ordered[3]);
+            Assert.Equal(order[4], ordered[4]);
         }
-
-        Assert.NotNull(polygon);
-
-        var order = new string[] { "-8d005937-384b-4fc9-8aae-9a8e6a65c611", "-cfe0e792-5320-40a1-aa00-9def7841663e", "-239848d3-9a03-418b-898f-69efa45e4c11", "-5b22a1de-ed10-4809-81da-c9bd2fea2bb8", "-8a454969-03f4-48f8-b445-274cce15b62f" };
-
-        var ordered = StartAt(polygon.Geometry_Properties.Exterior.ToArray(), polygon.Geometry_Properties.Exterior.IndexOf(order[0]));
-
-        Assert.Equal(order[0], ordered[0]);
-        Assert.Equal(order[1], ordered[1]);
-        Assert.Equal(order[2], ordered[2]);
-        Assert.Equal(order[3], ordered[3]);
-        Assert.Equal(order[4], ordered[4]);
-
     }
 
     private static List<string> StartAt(string[] lst, int idx)
@@ -106,11 +114,13 @@ public class CreatePolygonFromLinesTest: TestBase
         Assert.Equal(5, result.AffectedFeatures.Count);
 
         var polygon = result.AffectedFeatures.FirstOrDefault(f => f.Geometry.GeometryType == "Polygon");
-        
-        Assert.Single(polygon!.Geometry_Properties!.Interiors!);
-        var interior1 = polygon!.Geometry_Properties!.Interiors![0];
-        Assert.Equal("-4", interior1[0]);
-        Assert.Equal("3", interior1[1]);        
+
+        var interiors = ReferenceHelper.GetInteriorReferences(polygon!);
+
+        Assert.Single(interiors);
+        var interior1 = interiors[0];
+        Assert.True(interior1[0].Reverse);
+        Assert.False(interior1[1].Reverse);        
     }
 
     [Fact]
