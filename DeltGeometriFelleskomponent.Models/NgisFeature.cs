@@ -22,7 +22,7 @@ public class NgisFeature
             
         }
     }
-
+    
     public Envelope? BoundingBox { get; set; }
     public AttributesTable Properties { get; set; }
     [JsonProperty("geometry_properties")]

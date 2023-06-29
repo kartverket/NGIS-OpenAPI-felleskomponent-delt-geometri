@@ -36,7 +36,11 @@ namespace DeltGeometriFelleskomponent.TopologyImplementation
             //find all polygons affected by these changes
             var affectedPolygons = request.AffectedFeatures
                 .Where(f => f.Geometry.GeometryType == "Polygon")
-                .Where(f => NgisFeatureHelper.GetAllReferences(f).Any(r => affectedIds.Contains(r)));
+                .Where(f =>
+                {
+                    var all = NgisFeatureHelper.GetAllReferences(f);
+                    return all.Any(r => affectedIds.Contains(r));
+                });
 
             if (!affectedPolygons.Any())
             {

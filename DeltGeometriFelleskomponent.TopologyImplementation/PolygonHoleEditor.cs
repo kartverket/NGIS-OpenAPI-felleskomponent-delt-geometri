@@ -121,9 +121,17 @@ public static class PolygonHoleEditor
         holes.Add(ring);
 
         feature.Geometry = PolygonCreator.EnsureOrdering(new Polygon(polygon.Shell, holes.ToArray()));
-        var interiors = NgisFeatureHelper.GetInteriors(feature);
-        interiors.Add(new List<string>() { $"{(isReversed ? "-" : "")}{NgisFeatureHelper.GetLokalId(hole)}" });
-        NgisFeatureHelper.SetInterior(feature, interiors);
+      
+
+        ReferenceHelper.AddInterior(feature, new List<PolygonCreator.FeatureWithDirection>()
+        {
+           new()
+           {
+               Feature = hole,
+               IsReversed = isReversed
+           }
+        });
+
         NgisFeatureHelper.SetOperation(feature, Operation.Replace);
 
         return new List<NgisFeature>() { feature, hole };
@@ -142,7 +150,17 @@ public static class PolygonHoleEditor
         var ringFeatureId = ringFeature != null ? NgisFeatureHelper.GetLokalId(ringFeature) : null;
         var interiors = NgisFeatureHelper.GetInteriors(feature);
 
-        NgisFeatureHelper.SetInterior(feature, ringFeatureId != null ? interiors.Where(h => !h.Select(NgisFeatureHelper.RemoveSign).Contains(ringFeatureId)).ToArray() : interiors);
+        var reference = ReferenceHelper.GetInteriorReferences(feature).SelectMany(l => l).ToList()
+            .Find(e => e.LokalId == ringFeatureId);
+        if (reference != null)
+        {
+            var holeIdx = reference.Idx[1];
+            ReferenceHelper.RemoveInteriorAt(feature, holeIdx);
+        }
+
+
+        //ReferenceHelper.RemoveInterior
+        //NgisFeatureHelper.SetInterior(feature, ringFeatureId != null ? interiors.Where(h => !h.Select(NgisFeatureHelper.RemoveSign).Contains(ringFeatureId)).ToArray() : interiors);
         return new List<NgisFeature>() { feature };
     }
 

@@ -39,8 +39,13 @@ public class TopologyImplementation : ITopologyImplementation
         if (request.Feature.Geometry.IsEmpty)
         {
             // Polygonet er tomt, altså ønsker brukeren å lage et nytt polygon basert på grenselinjer
-            if (request.Feature.Geometry_Properties?.Exterior == null) return new TopologyResponse();
-            var referredFeatures = GetReferredFeatures(request.Feature, result.AffectedFeatures);
+
+
+            var references = ReferenceHelper.GetBoundsReferences(request.Feature);
+            if (references.Count == 0){
+                return new TopologyResponse();
+            }
+            var referredFeatures = GetReferredFeatures(references, result.AffectedFeatures);
             // CreatePolygonFromLines now return NgisFeature FeatureReferences for lines
             var res = _polygonCreator.CreatePolygonFromLines(referredFeatures, null);           
             return res.First();
@@ -59,18 +64,15 @@ public class TopologyImplementation : ITopologyImplementation
     }
 
 
-    private static List<NgisFeature> GetReferredFeatures(NgisFeature feature, IEnumerable<NgisFeature> affectedFeatures)
+    private static List<NgisFeature> GetReferredFeatures(List<BoundsReference> references, IEnumerable<NgisFeature> affectedFeatures)
     {
         var affected = affectedFeatures.ToDictionary(NgisFeatureHelper.GetLokalId, a => a);
+
         var referredFeatures = new List<NgisFeature>();
-        if (feature.Geometry_Properties == null)
-        {
-            throw new BadRequestException("Missing Geometry_Properties on feature");
-        }
 
-        var holes = feature.Geometry_Properties?.Interiors?.SelectMany(i => i);
+        var referredIds = references.Select(r => r.LokalId);
 
-        foreach (var featureId in feature.Geometry_Properties!.Exterior.Concat(holes ?? new List<string>()))
+        foreach (var featureId in referredIds)
         {
             if (affected.TryGetValue(featureId, out var referredFeature))
             {

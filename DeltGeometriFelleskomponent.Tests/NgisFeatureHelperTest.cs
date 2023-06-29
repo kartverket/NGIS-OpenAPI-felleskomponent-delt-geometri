@@ -1,4 +1,6 @@
-﻿using DeltGeometriFelleskomponent.Models;
+﻿using System.Collections.Generic;
+using DeltGeometriFelleskomponent.Models;
+using DeltGeometriFelleskomponent.TopologyImplementation;
 using NetTopologySuite.Geometries;
 using Xunit;
 
@@ -21,4 +23,6 @@ public class NgisFeatureHelperTest: TestBase
         var feature = NgisFeatureHelper.CreateFeature(new Point(1, 1), id);
         Assert.Equal(id, NgisFeatureHelper.GetLokalId(feature));
     }
+
+    
 }

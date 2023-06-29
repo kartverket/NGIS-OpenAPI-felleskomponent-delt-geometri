@@ -13,6 +13,7 @@ public class PolygonCreator
         request.Feature.Geometry = EnsureOrdering((Polygon)request.Feature.Geometry);
         request.Feature = NgisFeatureHelper.EnsureLocalId(request.Feature);
         var exteriorLine = CreateExteriorLineForPolyon(request.Feature);
+
         var interiorLines = CreateInteriorLinesForPolyon(request.Feature);
         return new TopologyResponse()
         {
@@ -83,12 +84,12 @@ public class PolygonCreator
                 var interiorReferences = orderedPolygon.InteriorRings.Select(hole => GetOrientedFeatures(hole, lineFeatures).ToList()).ToList();
                 referencesInteriors = interiorReferences.Select(hole => hole.Select(f => f.Feature).ToList()).ToList();
 
-                NgisFeatureHelper.SetReferences(polygonFeature, exteriorReferences.Select(GetIdWithDirection), interiorReferences.Select(hole => hole.Select(GetIdWithDirection)));
+                ReferenceHelper.SetReferences(polygonFeature, exteriorReferences, interiorReferences);
             }
-
             else
             {
-                NgisFeatureHelper.SetReferences(polygonFeature, lineFeatures, null);
+                ReferenceHelper.SetReferences(polygonFeature, lineFeatures.Select(f => new FeatureWithDirection(){IsReversed = false, Feature = f}), null);
+              
             }
             NgisFeatureHelper.SetOperation(polygonFeature, Operation.Create);
 
@@ -112,7 +113,12 @@ public class PolygonCreator
         var exteriorFeature = NgisFeatureHelper.CreateFeature(new LineString(((Polygon)polygonFeature.Geometry).Shell.Coordinates));
         NgisFeatureHelper.SetOperation(exteriorFeature, Operation.Create);
         //TODO: Handle winding?
-        NgisFeatureHelper.SetReferences(polygonFeature, new List<NgisFeature>() { exteriorFeature }, null);
+        ReferenceHelper.SetReferences(polygonFeature, new List<FeatureWithDirection>() {new ()
+        {
+            Feature = exteriorFeature, 
+            IsReversed = false
+        }}, null);
+
         return exteriorFeature;
     }
 
@@ -122,7 +128,7 @@ public class PolygonCreator
         if (interiorFeatures.Count > 0)
         {
             //TODO: Handle winding?
-            NgisFeatureHelper.SetInterior(polygonFeature, interiorFeatures.Select(f => new List<NgisFeature>() { f }));
+           ReferenceHelper.AddInterior(polygonFeature, interiorFeatures.Select(f => new FeatureWithDirection(){Feature = f, IsReversed = false}));
         }
         return interiorFeatures;
     }
@@ -143,6 +149,7 @@ public class PolygonCreator
 
     private static string GetIdWithDirection(FeatureWithDirection f) =>
         $"{(f.IsReversed ? "-" : "")}{NgisFeatureHelper.GetLokalId(f.Feature)}";
+
 
     private static IEnumerable<FeatureWithDirection> GetOrientedFeatures(Geometry ring, IEnumerable<NgisFeature> candidates)
     {
@@ -185,7 +192,7 @@ public class PolygonCreator
         => line.Coordinates[0].Equals(coords[index]) && line.Coordinates[1].Equals(coords[index + 1]);
     
 
-    private class FeatureWithDirection 
+    public class FeatureWithDirection
     {
         public NgisFeature Feature { get; set; }
         public bool IsReversed { get; set; }
