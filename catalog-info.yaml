@@ -1,0 +1,38 @@
+# nonk8s
+apiVersion: "backstage.io/v1alpha1"
+kind: "Component"
+metadata:
+  name: "NGIS-OpenAPI-felleskomponent-delt-geometri"
+  tags:
+  - "public"
+spec:
+  type: "documentation"
+  lifecycle: "production"
+  owner: "nasjonalt_geografisk_informasjonssystem_qms"
+  system: "ngis"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Group"
+metadata:
+  name: "security_champion_NGIS-OpenAPI-felleskomponent-delt-geometri"
+  title: "Security Champion NGIS-OpenAPI-felleskomponent-delt-geometri"
+spec:
+  type: "security_champion"
+  parent: "land_security_champions"
+  members:
+  - "NilsIvarNes"
+  children:
+  - "resource:NGIS-OpenAPI-felleskomponent-delt-geometri"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Resource"
+metadata:
+  name: "NGIS-OpenAPI-felleskomponent-delt-geometri"
+  links:
+  - url: "https://github.com/kartverket/NGIS-OpenAPI-felleskomponent-delt-geometri"
+    title: "NGIS-OpenAPI-felleskomponent-delt-geometri på GitHub"
+spec:
+  type: "repo"
+  owner: "security_champion_NGIS-OpenAPI-felleskomponent-delt-geometri"
+  dependencyOf:
+  - "component:NGIS-OpenAPI-felleskomponent-delt-geometri"
